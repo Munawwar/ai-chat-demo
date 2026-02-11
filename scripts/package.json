@@ -8,8 +8,11 @@
     "typecheck": "tsc --noEmit"
   },
   "dependencies": {
+    "@ai-sdk/amazon-bedrock": "^4.0.55",
     "@aws-sdk/dsql-signer": "^3.0.0",
-    "pg": "^8.13.0"
+    "ai": "^6.0.79",
+    "pg": "^8.13.0",
+    "zod": "^4.3.6"
   },
   "devDependencies": {
     "@types/pg": "^8.11.0",

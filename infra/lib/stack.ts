@@ -38,6 +38,13 @@ export class AiChatStack extends cdk.Stack {
       })
     );
 
+    agentFn.addToRolePolicy(
+      new iam.PolicyStatement({
+        actions: ["bedrock:InvokeModelWithResponseStream", "bedrock:InvokeModel"],
+        resources: ["*"],
+      })
+    );
+
     const fnUrl = agentFn.addFunctionUrl({
       authType: lambda.FunctionUrlAuthType.NONE,
       invokeMode: lambda.InvokeMode.RESPONSE_STREAM,

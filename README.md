@@ -27,6 +27,9 @@ region = eu-west-1
 Then deploy
 ```bash
 cd infra
+# one-time setup
+npx cdk bootstrap
+# Run this on every deployment
 npx cdk deploy
 ```
 
