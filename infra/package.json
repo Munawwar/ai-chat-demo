@@ -9,6 +9,9 @@
     "deploy": "cdk deploy",
     "typecheck": "tsc --noEmit"
   },
+  "overrides": {
+    "@aws-cdk/cloud-assembly-schema": "50.4.0"
+  },
   "dependencies": {
     "aws-cdk-lib": "^2.180.0",
     "constructs": "^10.4.2"
