@@ -1,0 +1,8 @@
+{
+  "app": "node --experimental-strip-types bin/app.ts",
+  "profile": "personal",
+  "watch": {
+    "include": ["**"],
+    "exclude": ["node_modules", "cdk.out"]
+  }
+}
