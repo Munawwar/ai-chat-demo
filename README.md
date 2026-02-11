@@ -39,7 +39,7 @@ That outputs the Lambda function URL and DSQL endpoint.
 
 ```bash
 cd scripts
-DSQL_ENDPOINT=<endpoint-from-deploy-output> npm run seed
+AWS_PROFILE=personal AWS_REGION=eu-west-1 DSQL_ENDPOINT=<endpoint-from-deploy-output> npm run seed
 ```
 
 Populates ~800 orders and ~120 drivers with a baked-in anomaly: Dubai Marina has a driver shortage and delivery delays in the last hour.

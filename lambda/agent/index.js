@@ -1,13 +1,18 @@
 import { streamText, tool } from "ai";
-import { bedrock } from "@ai-sdk/amazon-bedrock";
+import { createAmazonBedrock } from "@ai-sdk/amazon-bedrock";
+import { fromNodeProviderChain } from "@aws-sdk/credential-providers";
 import { DsqlSigner } from "@aws-sdk/dsql-signer";
 import pg from "pg";
 import { z } from "zod";
 
+const bedrock = createAmazonBedrock({
+  credentialProvider: fromNodeProviderChain(),
+});
+
 const { DSQL_ENDPOINT, DSQL_REGION = "eu-west-1" } = process.env;
 
 const MODEL_ID =
-  process.env.MODEL_ID ?? "eu.anthropic.claude-haiku-4-5-20251001-v1:0";
+  process.env.MODEL_ID ?? "minimax.minimax-m2.1";
 
 const SYSTEM_PROMPT = `You are an AI operations copilot for a super-app (rides, delivery, payments) operating in Dubai.
 You have access to tools that query the live orders and drivers database.

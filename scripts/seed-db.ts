@@ -1,13 +1,28 @@
 import pg from "pg";
 import { DsqlSigner } from "@aws-sdk/dsql-signer";
+import {
+  CloudFormationClient,
+  DescribeStacksCommand,
+} from "@aws-sdk/client-cloudformation";
 
-const DSQL_ENDPOINT = process.env.DSQL_ENDPOINT;
-if (!DSQL_ENDPOINT) {
-  console.error("DSQL_ENDPOINT env var is required");
-  process.exit(1);
+const REGION = process.env.AWS_REGION ?? "eu-west-1";
+const STACK_NAME = "ai-chat-stack";
+
+async function getStackOutput(key: string): Promise<string | undefined> {
+  const cfn = new CloudFormationClient({ region: REGION });
+  const { Stacks } = await cfn.send(new DescribeStacksCommand({ StackName: STACK_NAME }));
+  return Stacks?.[0]?.Outputs?.find((o: { OutputKey?: string }) => o.OutputKey === key)?.OutputValue;
 }
 
-const REGION = process.env.AWS_REGION ?? "us-east-1";
+let DSQL_ENDPOINT = process.env.DSQL_ENDPOINT;
+if (!DSQL_ENDPOINT) {
+  console.log("DSQL_ENDPOINT not set, resolving from CloudFormation...");
+  DSQL_ENDPOINT = await getStackOutput("DsqlEndpoint");
+}
+if (!DSQL_ENDPOINT) {
+  console.error("Could not resolve DSQL_ENDPOINT");
+  process.exit(1);
+}
 
 const AREAS = [
   "dubai_marina",
@@ -43,34 +58,31 @@ function weightedPick<T>(items: readonly T[], weights: number[]): T {
   return items[items.length - 1]!;
 }
 
-const SCHEMA = `
-DROP TABLE IF EXISTS orders;
-DROP TABLE IF EXISTS drivers;
-
-CREATE TABLE orders (
-  id UUID PRIMARY KEY DEFAULT gen_random_uuid(),
-  type VARCHAR(20) NOT NULL,
-  status VARCHAR(20) NOT NULL,
-  area VARCHAR(50) NOT NULL,
-  created_at TIMESTAMPTZ NOT NULL,
-  estimated_delivery_min INT NOT NULL,
-  actual_delivery_min INT,
-  driver_id UUID,
-  delay_reason VARCHAR(100)
-);
-
-CREATE TABLE drivers (
-  id UUID PRIMARY KEY DEFAULT gen_random_uuid(),
-  name VARCHAR(100) NOT NULL,
-  area VARCHAR(50) NOT NULL,
-  status VARCHAR(20) NOT NULL,
-  last_seen TIMESTAMPTZ NOT NULL
-);
-
-CREATE INDEX idx_orders_area ON orders(area);
-CREATE INDEX idx_orders_created_at ON orders(created_at);
-CREATE INDEX idx_drivers_area ON drivers(area);
-`;
+const SCHEMA_STATEMENTS = [
+  `DROP TABLE IF EXISTS orders`,
+  `DROP TABLE IF EXISTS drivers`,
+  `CREATE TABLE orders (
+    id UUID PRIMARY KEY DEFAULT gen_random_uuid(),
+    type VARCHAR(20) NOT NULL,
+    status VARCHAR(20) NOT NULL,
+    area VARCHAR(50) NOT NULL,
+    created_at TIMESTAMPTZ NOT NULL,
+    estimated_delivery_min INT NOT NULL,
+    actual_delivery_min INT,
+    driver_id UUID,
+    delay_reason VARCHAR(100)
+  )`,
+  `CREATE TABLE drivers (
+    id UUID PRIMARY KEY DEFAULT gen_random_uuid(),
+    name VARCHAR(100) NOT NULL,
+    area VARCHAR(50) NOT NULL,
+    status VARCHAR(20) NOT NULL,
+    last_seen TIMESTAMPTZ NOT NULL
+  )`,
+  `CREATE INDEX ASYNC idx_orders_area ON orders(area)`,
+  `CREATE INDEX ASYNC idx_orders_created_at ON orders(created_at)`,
+  `CREATE INDEX ASYNC idx_drivers_area ON drivers(area)`,
+];
 
 interface Order {
   type: string;
@@ -207,7 +219,9 @@ async function main() {
   console.log("Connected to DSQL");
 
   console.log("Creating schema...");
-  await client.query(SCHEMA);
+  for (const stmt of SCHEMA_STATEMENTS) {
+    await client.query(stmt);
+  }
 
   console.log("Inserting drivers...");
   const drivers = generateDrivers();
