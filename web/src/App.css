@@ -100,6 +100,27 @@ header h1 {
   word-wrap: break-word;
 }
 
+.text-part > :first-child {
+  margin-top: 0;
+}
+
+.text-part > :last-child {
+  margin-bottom: 0;
+}
+
+.text-part p,
+.text-part ul,
+.text-part ol,
+.text-part pre,
+.text-part table {
+  margin: 0.5rem 0;
+}
+
+.text-part ul,
+.text-part ol {
+  padding-left: 1.25rem;
+}
+
 .text-part strong {
   color: #fff;
 }
@@ -109,6 +130,19 @@ header h1 {
   padding: 0.1em 0.4em;
   border-radius: 4px;
   font-size: 0.85em;
+}
+
+.text-part pre {
+  background: #17172a;
+  border: 1px solid #2a2a4a;
+  border-radius: 8px;
+  padding: 0.6rem 0.75rem;
+  overflow-x: auto;
+}
+
+.text-part pre code {
+  background: transparent;
+  padding: 0;
 }
 
 .tool-part {
@@ -156,7 +190,9 @@ header h1 {
 }
 
 .tool-result th,
-.tool-result td {
+.tool-result td,
+.text-part th,
+.text-part td {
   padding: 0.35rem 0.5rem;
   text-align: left;
   border-bottom: 1px solid #2a2a4a;
@@ -170,8 +206,18 @@ header h1 {
   background: #22223a;
 }
 
+.text-part th {
+  color: #aaa;
+  font-weight: 600;
+  background: #22223a;
+}
+
 .tool-result td {
   color: #ccc;
+}
+
+.text-part td {
+  color: #ddd;
 }
 
 .input-form {

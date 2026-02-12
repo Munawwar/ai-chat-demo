@@ -1,6 +1,8 @@
 import { useState, useRef, useEffect } from "react";
 import { useChat } from "@ai-sdk/react";
 import { DefaultChatTransport } from "ai";
+import ReactMarkdown from "react-markdown";
+import remarkGfm from "remark-gfm";
 import "./App.css";
 
 const API_URL = import.meta.env.VITE_API_URL
@@ -56,7 +58,11 @@ export default function App() {
             <div className="message-content">
               {msg.parts.map((part, i) => {
                 if (part.type === "text") {
-                  return <div key={i} className="text-part" dangerouslySetInnerHTML={{ __html: formatMarkdown(part.text) }} />;
+                  return (
+                    <div key={i} className="text-part">
+                      <ReactMarkdown remarkPlugins={[remarkGfm]}>{part.text}</ReactMarkdown>
+                    </div>
+                  );
                 }
                 if (part.type === "step-start") return null;
                 if (part.type.startsWith("tool-") || part.type === "dynamic-tool") {
@@ -127,20 +133,6 @@ export default function App() {
 function formatToolName(name?: string): string {
   if (!name) return "Tool";
   return name.replace(/_/g, " ").replace(/\b\w/g, (c) => c.toUpperCase());
-}
-
-function formatMarkdown(text: string): string {
-  let html = text
-    .replace(/&/g, "&amp;")
-    .replace(/</g, "&lt;")
-    .replace(/>/g, "&gt;");
-
-  html = html
-    .replace(/\*\*(.*?)\*\*/g, "<strong>$1</strong>")
-    .replace(/`([^`]+)`/g, "<code>$1</code>")
-    .replace(/\n/g, "<br>");
-
-  return html;
 }
 
 function renderToolResult(result: unknown): React.ReactNode {

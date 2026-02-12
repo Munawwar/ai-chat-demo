@@ -4,8 +4,16 @@ import {
   DescribeStacksCommand,
 } from "@aws-sdk/client-cloudformation";
 
-const AWS_REGION = process.env.AWS_REGION ?? "eu-west-1";
-const STACK_NAME = process.env.STACK_NAME ?? "ai-chat-stack";
+function requireEnv(name) {
+  const value = process.env[name];
+  if (!value) {
+    throw new Error(`${name} is required (set it in .env or shell env).`);
+  }
+  return value;
+}
+
+const AWS_REGION = requireEnv("AWS_REGION");
+const STACK_NAME = requireEnv("STACK_NAME");
 const PORT = process.env.PORT ?? 3001;
 const DATA_STREAM_MODE = (process.env.DATA_STREAM_RESPONSE_MODE ?? "true") === "true";
 

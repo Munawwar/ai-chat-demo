@@ -1,6 +1,5 @@
 {
   "app": "node --experimental-strip-types bin/app.ts",
-  "profile": "personal",
   "toolkitStackName": "CDKToolkitAiChat",
   "context": {
     "@aws-cdk/core:bootstrapQualifier": "aichatx01"

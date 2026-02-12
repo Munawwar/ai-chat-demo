@@ -28,6 +28,7 @@ By default, commands assume:
 - `AWS_PROFILE=personal`
 - `AWS_REGION=eu-west-1`
 - `STACK_NAME=ai-chat-stack`
+- `NAMESPACE=ai-chat`
 
 You can edit `.env` once and all project scripts will reuse it automatically.
 Do not add `DSQL_ENDPOINT` to `.env`; it is resolved dynamically for local workflows, and injected by CDK for deployed Lambda.

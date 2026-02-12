@@ -15,7 +15,10 @@ fi
 : "${AWS_PROFILE:=personal}"
 : "${AWS_REGION:=eu-west-1}"
 : "${STACK_NAME:=ai-chat-stack}"
+: "${NAMESPACE:=${STACK_NAME%-stack}}"
+: "${DSQL_REGION:=$AWS_REGION}"
+: "${MODEL_ID:=minimax.minimax-m2.1}"
 
-export AWS_PROFILE AWS_REGION STACK_NAME
+export AWS_PROFILE AWS_REGION STACK_NAME NAMESPACE DSQL_REGION MODEL_ID
 
 exec "$@"

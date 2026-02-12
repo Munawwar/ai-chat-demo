@@ -9,7 +9,8 @@ const bedrock = createAmazonBedrock({
   credentialProvider: fromNodeProviderChain(),
 });
 
-const { DSQL_ENDPOINT, DSQL_REGION = "eu-west-1" } = process.env;
+const DSQL_ENDPOINT = process.env.DSQL_ENDPOINT;
+const DSQL_REGION = process.env.DSQL_REGION ?? process.env.AWS_REGION;
 
 const MODEL_ID =
   process.env.MODEL_ID ?? "minimax.minimax-m2.1";
@@ -23,12 +24,17 @@ When a user asks about an operational issue, use your tools to investigate metho
 4. Propose concrete actions
 
 Always ground your analysis in the data returned by tools. Be concise and actionable.
-Format numbers and tables clearly. When referencing areas, use readable names (e.g. "Dubai Marina" not "dubai_marina").`;
+Format numbers and tables clearly. When referencing areas, use readable names (e.g. "Dubai Marina" not "dubai_marina").
+Avoid emojis and decorative symbols. Keep formatting professional and clean.`;
 
 let dbPool = null;
 
 async function getPool() {
   if (dbPool) return dbPool;
+
+  if (!DSQL_ENDPOINT || !DSQL_REGION) {
+    throw new Error("DSQL_ENDPOINT and DSQL_REGION must be configured.");
+  }
 
   const signer = new DsqlSigner({
     hostname: DSQL_ENDPOINT,
