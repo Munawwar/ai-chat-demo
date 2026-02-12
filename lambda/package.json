@@ -7,11 +7,11 @@
     "dev": "AWS_PROFILE=personal AWS_REGION=eu-west-1 node --watch dev.js"
   },
   "dependencies": {
-    "@ai-sdk/amazon-bedrock": "^2.0.0",
+    "@ai-sdk/amazon-bedrock": "^4.0.58",
     "@aws-sdk/client-cloudformation": "^3.987.0",
     "@aws-sdk/credential-providers": "^3.987.0",
     "@aws-sdk/dsql-signer": "^3.0.0",
-    "ai": "^4.0.0",
+    "ai": "^6.0.82",
     "lambda-stream": "^0.6.0",
     "pg": "^8.13.0",
     "zod": "^3.25.76"

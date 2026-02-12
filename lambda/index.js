@@ -1,4 +1,4 @@
-import { streamText, tool } from "ai";
+import { convertToModelMessages, stepCountIs, streamText, tool } from "ai";
 import { createAmazonBedrock } from "@ai-sdk/amazon-bedrock";
 import { fromNodeProviderChain } from "@aws-sdk/credential-providers";
 import { DsqlSigner } from "@aws-sdk/dsql-signer";
@@ -58,7 +58,7 @@ const tools = {
   query_orders: tool({
     description:
       "Query recent orders. Can filter by area, status, type, and time range. Returns order details including delays and reasons.",
-    parameters: z.object({
+    inputSchema: z.object({
       area: z
         .string()
         .optional()
@@ -114,7 +114,7 @@ const tools = {
   get_area_stats: tool({
     description:
       "Get aggregated delivery statistics per area: order count, average delay, cancellation rate, and most common delay reasons. Best for identifying which areas have problems.",
-    parameters: z.object({
+    inputSchema: z.object({
       hours_ago: z
         .number()
         .optional()
@@ -143,7 +143,7 @@ const tools = {
   query_drivers: tool({
     description:
       "Query driver availability by area. Shows count of available, busy, and offline drivers.",
-    parameters: z.object({
+    inputSchema: z.object({
       area: z
         .string()
         .optional()
@@ -179,52 +179,124 @@ const tools = {
   }),
 };
 
+import { readFileSync, existsSync } from "node:fs";
+import { join } from "node:path";
+import { fileURLToPath } from "node:url";
 import { Readable } from "node:stream";
 import { streamifyResponse } from "lambda-stream";
 
 const DATA_STREAM_MODE = (process.env.DATA_STREAM_RESPONSE_MODE ?? "true") === "true";
 
-export function createAgentStream(messages) {
+const WEB_DIR = join(fileURLToPath(import.meta.url), "..", "web");
+
+const MIME_TYPES = {
+  ".html": "text/html",
+  ".js":   "application/javascript",
+  ".css":  "text/css",
+  ".svg":  "image/svg+xml",
+  ".png":  "image/png",
+  ".ico":  "image/x-icon",
+  ".json": "application/json",
+};
+
+function serveStatic(path, responseStream) {
+  const safePath = path.replace(/\.\./g, "");
+  const filePath = join(WEB_DIR, safePath === "/" || safePath === "" ? "index.html" : safePath);
+  const ext = filePath.slice(filePath.lastIndexOf("."));
+  const contentType = MIME_TYPES[ext] ?? "application/octet-stream";
+
+  if (!existsSync(filePath)) {
+    responseStream.setContentType("text/html");
+    responseStream.write("<html><body><p>Not found</p></body></html>");
+    responseStream.end();
+    return;
+  }
+
+  responseStream.setContentType(contentType);
+  responseStream.write(readFileSync(filePath));
+  responseStream.end();
+}
+
+async function toModelMessages(messages) {
+  if (!Array.isArray(messages) || messages.length === 0) {
+    return [];
+  }
+
+  if (Array.isArray(messages[0]?.parts)) {
+    return await convertToModelMessages(messages, { tools });
+  }
+
+  return messages;
+}
+
+async function pipeWebResponseToStream(response, responseStream) {
+  const contentType = response.headers.get("content-type");
+  if (contentType) {
+    responseStream.setContentType(contentType);
+  }
+
+  let stream = responseStream;
+  const awsLambdaRuntime = globalThis.awslambda;
+  if (awsLambdaRuntime?.HttpResponseStream?.from) {
+    stream = awsLambdaRuntime.HttpResponseStream.from(responseStream, {
+      statusCode: response.status || 200,
+      headers: Object.fromEntries(response.headers.entries()),
+    });
+  }
+
+  if (!response.body) {
+    stream.end();
+    return;
+  }
+
+  const readable = Readable.fromWeb(response.body);
+  await new Promise((resolve, reject) => {
+    readable.pipe(stream);
+    readable.on("end", resolve);
+    readable.on("error", reject);
+  });
+}
+
+export async function createAgentStream(messages) {
+  const modelMessages = await toModelMessages(messages);
   return streamText({
     model: bedrock(MODEL_ID),
     system: SYSTEM_PROMPT,
-    messages,
+    messages: modelMessages,
     tools,
-    maxSteps: 10,
+    stopWhen: stepCountIs(10),
   });
 }
 
 export const handler = streamifyResponse(
   async (event, responseStream) => {
+    const path = event.requestContext?.http?.path ?? "/";
+
+    if (!path.startsWith("/api/")) {
+      serveStatic(path, responseStream);
+      return;
+    }
+
     const { messages } = JSON.parse(event.body ?? "{}");
 
     if (!messages?.length) {
+      responseStream.setContentType("application/json");
       responseStream.write(JSON.stringify({ error: "messages required" }));
       responseStream.end();
       return;
     }
 
-    const result = streamText({
-      model: bedrock(MODEL_ID),
-      system: SYSTEM_PROMPT,
-      messages,
-      tools,
-      maxSteps: 10,
-    });
+    const result = await createAgentStream(messages);
 
     if (DATA_STREAM_MODE) {
-      const readable = Readable.fromWeb(result.toDataStream());
-      await new Promise((resolve, reject) => {
-        readable.pipe(responseStream);
-        readable.on("end", resolve);
-        readable.on("error", reject);
-      });
+      const response = result.toUIMessageStreamResponse();
+      await pipeWebResponseToStream(response, responseStream);
     } else {
       for await (const part of result.fullStream) {
         switch (part.type) {
           case "text-delta":
             responseStream.write(
-              JSON.stringify({ type: "text-delta", text: part.textDelta }) + "\n"
+              JSON.stringify({ type: "text-delta", text: part.textDelta ?? part.text }) + "\n"
             );
             break;
           case "tool-call":

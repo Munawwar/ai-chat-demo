@@ -1,0 +1,223 @@
+.app {
+  display: flex;
+  flex-direction: column;
+  height: 100vh;
+  max-width: 860px;
+  margin: 0 auto;
+  width: 100%;
+}
+
+header {
+  padding: 1rem 1.5rem;
+  border-bottom: 1px solid #2a2a4a;
+}
+
+header h1 {
+  font-size: 1.25rem;
+  font-weight: 600;
+  color: #fff;
+}
+
+.subtitle {
+  font-size: 0.8rem;
+  color: #888;
+}
+
+.messages {
+  flex: 1;
+  overflow-y: auto;
+  padding: 1rem 1.5rem;
+  display: flex;
+  flex-direction: column;
+  gap: 1rem;
+}
+
+.empty-state {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  flex: 1;
+  gap: 1.5rem;
+  color: #888;
+}
+
+.suggestions {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 0.5rem;
+  justify-content: center;
+}
+
+.suggestions button {
+  background: #2a2a4a;
+  border: 1px solid #3a3a5a;
+  color: #ccc;
+  padding: 0.5rem 1rem;
+  border-radius: 8px;
+  cursor: pointer;
+  font-size: 0.85rem;
+  transition: background 0.2s;
+}
+
+.suggestions button:hover {
+  background: #3a3a5a;
+}
+
+.message {
+  display: flex;
+  flex-direction: column;
+  gap: 0.25rem;
+}
+
+.message-role {
+  font-size: 0.75rem;
+  font-weight: 600;
+  text-transform: uppercase;
+  letter-spacing: 0.05em;
+  color: #888;
+}
+
+.message.user .message-role { color: #6c9bff; }
+.message.assistant .message-role { color: #7cda9e; }
+
+.message-content {
+  font-size: 0.9rem;
+  line-height: 1.6;
+  color: #ddd;
+}
+
+.message.user .message-content {
+  color: #aac4ff;
+}
+
+.loading {
+  color: #888;
+  font-style: italic;
+}
+
+.text-part {
+  word-wrap: break-word;
+}
+
+.text-part strong {
+  color: #fff;
+}
+
+.text-part code {
+  background: #2a2a4a;
+  padding: 0.1em 0.4em;
+  border-radius: 4px;
+  font-size: 0.85em;
+}
+
+.tool-part {
+  margin: 0.5rem 0;
+  border: 1px solid #2a2a4a;
+  border-radius: 8px;
+  overflow: hidden;
+}
+
+.tool-part summary {
+  padding: 0.5rem 0.75rem;
+  background: #22223a;
+  cursor: pointer;
+  font-size: 0.8rem;
+  color: #aaa;
+}
+
+.tool-name {
+  color: #c9a0ff;
+  font-weight: 600;
+}
+
+.tool-args {
+  padding: 0.5rem 0.75rem;
+  font-size: 0.75rem;
+  color: #888;
+  background: #1a1a2e;
+  overflow-x: auto;
+}
+
+.tool-result {
+  padding: 0.5rem;
+  overflow-x: auto;
+}
+
+.table-wrapper {
+  overflow-x: auto;
+}
+
+.tool-result table,
+.text-part table {
+  width: 100%;
+  border-collapse: collapse;
+  font-size: 0.8rem;
+}
+
+.tool-result th,
+.tool-result td {
+  padding: 0.35rem 0.5rem;
+  text-align: left;
+  border-bottom: 1px solid #2a2a4a;
+  white-space: nowrap;
+}
+
+.tool-result th {
+  color: #aaa;
+  font-weight: 600;
+  text-transform: capitalize;
+  background: #22223a;
+}
+
+.tool-result td {
+  color: #ccc;
+}
+
+.input-form {
+  display: flex;
+  gap: 0.5rem;
+  padding: 1rem 1.5rem;
+  border-top: 1px solid #2a2a4a;
+  background: #1a1a2e;
+}
+
+.input-form input {
+  flex: 1;
+  padding: 0.75rem 1rem;
+  border: 1px solid #3a3a5a;
+  border-radius: 8px;
+  background: #22223a;
+  color: #eee;
+  font-size: 0.9rem;
+  outline: none;
+  transition: border-color 0.2s;
+}
+
+.input-form input:focus {
+  border-color: #6c9bff;
+}
+
+.input-form input::placeholder {
+  color: #666;
+}
+
+.input-form button {
+  padding: 0.75rem 1.5rem;
+  border: none;
+  border-radius: 8px;
+  background: #6c9bff;
+  color: #fff;
+  font-weight: 600;
+  cursor: pointer;
+  transition: background 0.2s;
+}
+
+.input-form button:hover:not(:disabled) {
+  background: #5a8aee;
+}
+
+.input-form button:disabled {
+  opacity: 0.4;
+  cursor: not-allowed;
+}

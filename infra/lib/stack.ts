@@ -22,7 +22,7 @@ export class AiChatStack extends cdk.Stack {
       functionName: `${ns}-agent`,
       runtime: lambda.Runtime.NODEJS_22_X,
       handler: "index.handler",
-      code: lambda.Code.fromAsset("../lambda/agent"),
+      code: lambda.Code.fromAsset("../lambda"),
       timeout: cdk.Duration.minutes(2),
       memorySize: 512,
       environment: {
@@ -50,7 +50,7 @@ export class AiChatStack extends cdk.Stack {
       invokeMode: lambda.InvokeMode.RESPONSE_STREAM,
       cors: {
         allowedOrigins: ["*"],
-        allowedMethods: [lambda.HttpMethod.POST],
+        allowedMethods: [lambda.HttpMethod.GET, lambda.HttpMethod.POST],
         allowedHeaders: ["content-type"],
       },
     });

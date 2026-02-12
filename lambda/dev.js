@@ -27,9 +27,23 @@ async function start() {
 
   const { handler, createAgentStream } = await import("./index.js");
 
+  const { readFile } = await import("node:fs/promises");
+  const { join } = await import("node:path");
+
+  const WEB_DIR = join(import.meta.dirname, "web");
+  const MIME_TYPES = {
+    ".html": "text/html",
+    ".js":   "application/javascript",
+    ".css":  "text/css",
+    ".svg":  "image/svg+xml",
+    ".png":  "image/png",
+    ".ico":  "image/x-icon",
+    ".json": "application/json",
+  };
+
   const server = createServer(async (req, res) => {
     res.setHeader("Access-Control-Allow-Origin", "*");
-    res.setHeader("Access-Control-Allow-Methods", "POST, OPTIONS");
+    res.setHeader("Access-Control-Allow-Methods", "GET, POST, OPTIONS");
     res.setHeader("Access-Control-Allow-Headers", "content-type");
 
     if (req.method === "OPTIONS") {
@@ -38,9 +52,21 @@ async function start() {
       return;
     }
 
-    if (req.method !== "POST") {
-      res.writeHead(405);
-      res.end("POST only");
+    const url = req.url ?? "/";
+
+    if (!url.startsWith("/api/")) {
+      const safePath = url.replace(/\.\./g, "");
+      const filePath = join(WEB_DIR, safePath === "/" ? "index.html" : safePath);
+      const ext = filePath.slice(filePath.lastIndexOf("."));
+      const contentType = MIME_TYPES[ext] ?? "application/octet-stream";
+      try {
+        const data = await readFile(filePath);
+        res.writeHead(200, { "Content-Type": contentType });
+        res.end(data);
+      } catch {
+        res.writeHead(404);
+        res.end("Not found — run `npm run build` from project root");
+      }
       return;
     }
 
@@ -58,13 +84,13 @@ async function start() {
     }
 
     if (DATA_STREAM_MODE) {
-      const result = createAgentStream(messages);
-      result.pipeDataStreamToResponse(res);
+      const result = await createAgentStream(messages);
+      result.pipeUIMessageStreamToResponse(res);
     } else {
       const event = {
         body,
         headers: { "content-type": "application/json" },
-        requestContext: { http: { method: "POST" } },
+        requestContext: { http: { method: "POST", path: "/api/chat" } },
       };
       const result = await handler(event);
       res.writeHead(200, { "Content-Type": "application/x-ndjson" });
@@ -75,7 +101,7 @@ async function start() {
   server.listen(PORT, () => {
     console.log(`Dev server: http://localhost:${PORT}`);
     console.log(`AWS: profile=${process.env.AWS_PROFILE ?? "default"} region=${process.env.AWS_REGION ?? "not set"}`);
-    console.log(`Stream mode: ${DATA_STREAM_MODE ? "data-stream" : "ndjson"}`);
+    console.log(`Stream mode: ${DATA_STREAM_MODE ? "ui-message-stream" : "ndjson"}`);
     console.log(`Model: ${process.env.MODEL_ID ?? "minimax.minimax-m2.1"}`);
     console.log(`DSQL: ${process.env.DSQL_ENDPOINT ?? "not set"}`);
   });
