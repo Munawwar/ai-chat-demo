@@ -4,7 +4,7 @@
   "private": true,
   "type": "module",
   "scripts": {
-    "dev": "AWS_PROFILE=personal AWS_REGION=eu-west-1 node --watch dev.js"
+    "dev": "../scripts/run-with-env.sh node --watch dev.js"
   },
   "dependencies": {
     "@ai-sdk/amazon-bedrock": "^4.0.58",

@@ -4,7 +4,7 @@
   "private": true,
   "type": "module",
   "scripts": {
-    "seed": "AWS_PROFILE=personal AWS_REGION=eu-west-1 node --experimental-strip-types seed-db.ts",
+    "seed": "./run-with-env.sh node --experimental-strip-types seed-db.ts",
     "typecheck": "tsc --noEmit"
   },
   "dependencies": {

@@ -4,9 +4,10 @@
   "private": true,
   "type": "module",
   "scripts": {
-    "cdk": "cdk",
-    "synth": "cdk synth",
-    "deploy": "cdk deploy",
+    "cdk": "../scripts/run-with-env.sh cdk",
+    "synth": "../scripts/run-with-env.sh cdk synth",
+    "bootstrap": "../scripts/run-with-env.sh cdk bootstrap",
+    "deploy": "../scripts/run-with-env.sh cdk deploy",
     "typecheck": "tsc --noEmit"
   },
   "overrides": {

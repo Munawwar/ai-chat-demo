@@ -1,8 +1,8 @@
-# AI Chat Demo App (It's just me learning stuff)
+# AI Chat Demo App
 
-Streaming agentic assistant for investigating super-app operational incidents.
+Streaming ops copilot for investigating super-app incidents.
 
-Built with AWS Bedrock models, AWS Lambda (streaming function URL), Aurora DSQL, and CDK. Default model is MiniMax 2.1. Can we switched to any other via environment variable.
+Built with AWS Bedrock, AWS Lambda (response streaming), Aurora DSQL, and CDK.
 
 ## Choice of tech
 
@@ -11,44 +11,87 @@ Built with AWS Bedrock models, AWS Lambda (streaming function URL), Aurora DSQL,
 - Lambda function URL supports streaming (SSE is needed for LLM responses) and it's cheaper than having an ALB + Fargate setup.
 - AI SDK is simple, supports AWS Bedrock, can switch models easily. And returning response back in their `DataStreamResponse` format gives is compatibility with use React hooks like `useChat` or even pre-build UI like [assistant-ui](https://github.com/assistant-ui/assistant-ui).
 
-## Setup
+## Prerequisites
+
+- Node.js 22+
+- npm 10+
+- AWS credentials configured (`~/.aws/credentials`)
+
+## Configure Once
 
 ```bash
-# Install dependencies
-cd infra && npm install # ignore warnings
-cd ../scripts && npm install
+cp .env.example .env
 ```
 
-## Deploy
+By default, commands assume:
 
-Your `~/.aws/credentials` file needs a `personal` profile:
-```ini
-[personal]
-aws_access_key_id = ...
-aws_secret_access_key = ...
-```
-Optionally add AWS `region` (by default `eu-west-1`) to `~/.aws/config`:
-```ini
-[profile personal]
-region = eu-west-1
-```
+- `AWS_PROFILE=personal`
+- `AWS_REGION=eu-west-1`
+- `STACK_NAME=ai-chat-stack`
 
-Then deploy
-```bash
-cd infra
-# one-time setup
-npx cdk bootstrap
-# Run this on every deployment
-npx cdk deploy
-```
+You can edit `.env` once and all project scripts will reuse it automatically.
+Do not add `DSQL_ENDPOINT` to `.env`; it is resolved dynamically for local workflows, and injected by CDK for deployed Lambda.
 
-That outputs the Lambda function URL and DSQL endpoint.
-
-## Seed the database
+## Install (one command)
 
 ```bash
-cd scripts
-AWS_PROFILE=personal AWS_REGION=eu-west-1 DSQL_ENDPOINT=<endpoint-from-deploy-output> npm run seed
+npm run install-all
 ```
 
-Populates ~800 orders and ~120 drivers with a baked-in anomaly: Dubai Marina has a driver shortage and delivery delays in the last hour.
+This installs dependencies for:
+
+- `lambda`
+- `web`
+- `infra`
+- `scripts`
+
+## Local Test (quick path)
+
+If you already deployed once before, these are enough:
+
+```bash
+npm run seed
+npm run dev
+```
+
+Then open `http://localhost:3001`.
+
+Notes:
+
+- `npm run dev` runs `vite build --watch` and the local Lambda server together, then serves both API and built frontend from `lambda/dev.js`.
+- `npm run seed` auto-resolves `DSQL_ENDPOINT` from CloudFormation stack output (`$STACK_NAME`) if not provided.
+
+## Deploy (quick path)
+
+First time in an account/region:
+
+```bash
+npm run bootstrap
+```
+
+Every deploy:
+
+```bash
+npm run deploy
+```
+
+CDK outputs:
+
+- `FunctionUrl`
+- `DsqlEndpoint`
+
+After deploy, reseed data:
+
+```bash
+npm run seed
+```
+
+## Useful Commands
+
+```bash
+npm run build      # build web to lambda/web
+npm run dev        # run local lambda dev server on :3001
+npm run seed       # seed DSQL data
+npm run synth      # cdk synth
+npm run deploy     # cdk deploy
+```

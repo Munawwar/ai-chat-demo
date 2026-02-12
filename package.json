@@ -1,8 +1,12 @@
 {
   "private": true,
   "scripts": {
-    "dev": "npm run dev --prefix lambda",
+    "install-all": "npm install --prefix lambda && npm install --prefix web && npm install --prefix infra && npm install --prefix scripts",
+    "dev": "./scripts/run-with-env.sh bash -c 'npm run build:watch --prefix web & WEB_PID=$!; trap \"kill $WEB_PID\" EXIT INT TERM; npm run dev --prefix lambda'",
     "build": "npm run build --prefix web",
-    "seed": "npm run seed --prefix scripts"
+    "seed": "./scripts/run-with-env.sh npm run seed --prefix scripts",
+    "synth": "./scripts/run-with-env.sh npm run synth --prefix infra",
+    "bootstrap": "./scripts/run-with-env.sh npm run bootstrap --prefix infra",
+    "deploy": "./scripts/run-with-env.sh npm run deploy --prefix infra"
   }
 }

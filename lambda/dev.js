@@ -4,15 +4,24 @@ import {
   DescribeStacksCommand,
 } from "@aws-sdk/client-cloudformation";
 
-const STACK_NAME = "ai-chat-stack";
+const AWS_REGION = process.env.AWS_REGION ?? "eu-west-1";
+const STACK_NAME = process.env.STACK_NAME ?? "ai-chat-stack";
 const PORT = process.env.PORT ?? 3001;
 const DATA_STREAM_MODE = (process.env.DATA_STREAM_RESPONSE_MODE ?? "true") === "true";
 
 async function getStackOutput(key) {
-  const cfn = new CloudFormationClient({ region: process.env.AWS_REGION ?? "eu-west-1" });
-  const { Stacks } = await cfn.send(new DescribeStacksCommand({ StackName: STACK_NAME }));
-  const output = Stacks?.[0]?.Outputs?.find((o) => o.OutputKey === key);
-  return output?.OutputValue;
+  const cfn = new CloudFormationClient({ region: AWS_REGION });
+  try {
+    const { Stacks } = await cfn.send(new DescribeStacksCommand({ StackName: STACK_NAME }));
+    const output = Stacks?.[0]?.Outputs?.find((o) => o.OutputKey === key);
+    return output?.OutputValue;
+  } catch (error) {
+    // Dev should keep running even without stack/credentials.
+    console.warn(
+      `Stack lookup failed (${error?.name ?? "Error"}): ${error?.message ?? String(error)}`,
+    );
+    return undefined;
+  }
 }
 
 async function start() {
@@ -21,7 +30,10 @@ async function start() {
     if (endpoint) {
       process.env.DSQL_ENDPOINT = endpoint;
     } else {
-      console.warn("Could not resolve DSQL_ENDPOINT from stack outputs");
+      console.warn(
+        `Could not resolve DSQL_ENDPOINT from stack '${STACK_NAME}' in region '${AWS_REGION}' (profile='${process.env.AWS_PROFILE ?? "default"}').`,
+      );
+      console.warn("Deploy the stack and ensure the correct AWS profile/region/stack are selected.");
     }
   }
 
@@ -83,6 +95,17 @@ async function start() {
       return;
     }
 
+    if (!process.env.DSQL_ENDPOINT) {
+      res.writeHead(503, { "Content-Type": "application/json" });
+      res.end(
+        JSON.stringify({
+          error: "DSQL_ENDPOINT not configured",
+          hint: `Ensure stack '${STACK_NAME}' exists in region '${AWS_REGION}' for profile '${process.env.AWS_PROFILE ?? "default"}'`,
+        }),
+      );
+      return;
+    }
+
     if (DATA_STREAM_MODE) {
       const result = await createAgentStream(messages);
       result.pipeUIMessageStreamToResponse(res);
@@ -100,7 +123,7 @@ async function start() {
 
   server.listen(PORT, () => {
     console.log(`Dev server: http://localhost:${PORT}`);
-    console.log(`AWS: profile=${process.env.AWS_PROFILE ?? "default"} region=${process.env.AWS_REGION ?? "not set"}`);
+    console.log(`AWS: profile=${process.env.AWS_PROFILE ?? "default"} region=${AWS_REGION} stack=${STACK_NAME}`);
     console.log(`Stream mode: ${DATA_STREAM_MODE ? "ui-message-stream" : "ndjson"}`);
     console.log(`Model: ${process.env.MODEL_ID ?? "minimax.minimax-m2.1"}`);
     console.log(`DSQL: ${process.env.DSQL_ENDPOINT ?? "not set"}`);

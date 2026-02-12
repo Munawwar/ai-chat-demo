@@ -6,7 +6,7 @@ import {
 } from "@aws-sdk/client-cloudformation";
 
 const REGION = process.env.AWS_REGION ?? "eu-west-1";
-const STACK_NAME = "ai-chat-stack";
+const STACK_NAME = process.env.STACK_NAME ?? "ai-chat-stack";
 
 async function getStackOutput(key: string): Promise<string | undefined> {
   const cfn = new CloudFormationClient({ region: REGION });
