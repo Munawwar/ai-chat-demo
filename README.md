@@ -1,6 +1,15 @@
-# AI Ops Copilot
+# AI Chat Demo App (It's just me learning stuff)
 
-Streaming agentic assistant for investigating super-app operational incidents. Built with AWS Lambda (streaming function URL), Aurora DSQL, and CDK.
+Streaming agentic assistant for investigating super-app operational incidents.
+
+Built with AWS Bedrock models, AWS Lambda (streaming function URL), Aurora DSQL, and CDK. Default model is MiniMax 2.1. Can we switched to any other via environment variable.
+
+## Choice of tech
+
+- AWS is the largest cloud provider
+- Serverless saves me $ for a demo app. Serverless compute like GCP Cloud Run is great, but the addition of serverless DB (Aurora DSQL) provision-able via code (CDK) is less friction for self-hosting purpose. It's all in one cloud infra.
+- Lambda function URL supports streaming (SSE is needed for LLM responses) and it's cheaper than having an ALB + Fargate setup.
+- AI SDK is simple, supports AWS Bedrock, can switch models easily. And returning response back in their `DataStreamResponse` format gives is compatibility with use React hooks like `useChat` or even pre-build UI like [assistant-ui](https://github.com/assistant-ui/assistant-ui).
 
 ## Setup
 

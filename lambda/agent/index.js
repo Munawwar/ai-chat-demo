@@ -179,7 +179,20 @@ const tools = {
   }),
 };
 
+import { Readable } from "node:stream";
 import { streamifyResponse } from "lambda-stream";
+
+const DATA_STREAM_MODE = (process.env.DATA_STREAM_RESPONSE_MODE ?? "true") === "true";
+
+export function createAgentStream(messages) {
+  return streamText({
+    model: bedrock(MODEL_ID),
+    system: SYSTEM_PROMPT,
+    messages,
+    tools,
+    maxSteps: 10,
+  });
+}
 
 export const handler = streamifyResponse(
   async (event, responseStream) => {
@@ -199,39 +212,47 @@ export const handler = streamifyResponse(
       maxSteps: 10,
     });
 
-    for await (const part of result.fullStream) {
-      switch (part.type) {
-        case "text-delta":
-          responseStream.write(
-            JSON.stringify({ type: "text-delta", text: part.textDelta }) + "\n"
-          );
-          break;
-        case "tool-call":
-          responseStream.write(
-            JSON.stringify({
-              type: "tool-call",
-              name: part.toolName,
-              args: part.args,
-            }) + "\n"
-          );
-          break;
-        case "tool-result":
-          responseStream.write(
-            JSON.stringify({
-              type: "tool-result",
-              name: part.toolName,
-              result: part.result,
-            }) + "\n"
-          );
-          break;
-        case "error":
-          responseStream.write(
-            JSON.stringify({ type: "error", error: String(part.error) }) + "\n"
-          );
-          break;
+    if (DATA_STREAM_MODE) {
+      const readable = Readable.fromWeb(result.toDataStream());
+      await new Promise((resolve, reject) => {
+        readable.pipe(responseStream);
+        readable.on("end", resolve);
+        readable.on("error", reject);
+      });
+    } else {
+      for await (const part of result.fullStream) {
+        switch (part.type) {
+          case "text-delta":
+            responseStream.write(
+              JSON.stringify({ type: "text-delta", text: part.textDelta }) + "\n"
+            );
+            break;
+          case "tool-call":
+            responseStream.write(
+              JSON.stringify({
+                type: "tool-call",
+                name: part.toolName,
+                args: part.args,
+              }) + "\n"
+            );
+            break;
+          case "tool-result":
+            responseStream.write(
+              JSON.stringify({
+                type: "tool-result",
+                name: part.toolName,
+                result: part.result,
+              }) + "\n"
+            );
+            break;
+          case "error":
+            responseStream.write(
+              JSON.stringify({ type: "error", error: String(part.error) }) + "\n"
+            );
+            break;
+        }
       }
+      responseStream.end();
     }
-
-    responseStream.end();
   }
 );

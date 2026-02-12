@@ -6,6 +6,7 @@ import {
 
 const STACK_NAME = "ai-chat-stack";
 const PORT = process.env.PORT ?? 3001;
+const DATA_STREAM_MODE = (process.env.DATA_STREAM_RESPONSE_MODE ?? "true") === "true";
 
 async function getStackOutput(key) {
   const cfn = new CloudFormationClient({ region: process.env.AWS_REGION ?? "eu-west-1" });
@@ -24,7 +25,7 @@ async function start() {
     }
   }
 
-  const { handler } = await import("./index.js");
+  const { handler, createAgentStream } = await import("./index.js");
 
   const server = createServer(async (req, res) => {
     res.setHeader("Access-Control-Allow-Origin", "*");
@@ -49,20 +50,32 @@ async function start() {
       req.on("end", () => resolve(data));
     });
 
-    const event = {
-      body,
-      headers: { "content-type": "application/json" },
-      requestContext: { http: { method: "POST" } },
-    };
+    const { messages } = JSON.parse(body);
+    if (!messages?.length) {
+      res.writeHead(400, { "Content-Type": "application/json" });
+      res.end(JSON.stringify({ error: "messages required" }));
+      return;
+    }
 
-    const result = await handler(event);
-    res.writeHead(200, { "Content-Type": "application/x-ndjson" });
-    res.end(result.body ?? result);
+    if (DATA_STREAM_MODE) {
+      const result = createAgentStream(messages);
+      result.pipeDataStreamToResponse(res);
+    } else {
+      const event = {
+        body,
+        headers: { "content-type": "application/json" },
+        requestContext: { http: { method: "POST" } },
+      };
+      const result = await handler(event);
+      res.writeHead(200, { "Content-Type": "application/x-ndjson" });
+      res.end(result.body ?? result);
+    }
   });
 
   server.listen(PORT, () => {
     console.log(`Dev server: http://localhost:${PORT}`);
     console.log(`AWS: profile=${process.env.AWS_PROFILE ?? "default"} region=${process.env.AWS_REGION ?? "not set"}`);
+    console.log(`Stream mode: ${DATA_STREAM_MODE ? "data-stream" : "ndjson"}`);
     console.log(`Model: ${process.env.MODEL_ID ?? "minimax.minimax-m2.1"}`);
     console.log(`DSQL: ${process.env.DSQL_ENDPOINT ?? "not set"}`);
   });
