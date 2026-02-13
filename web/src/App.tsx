@@ -31,7 +31,7 @@ export default function App() {
     <div className="app">
       <header>
         <h1>AI Ops Copilot</h1>
-        <p className="subtitle">Dubai Super-App Operations</p>
+        <p className="subtitle">Dubai Food Delivery Operations</p>
       </header>
 
       <div className="messages">

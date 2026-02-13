@@ -1,6 +1,8 @@
 # AI Chat Demo App
 
-Streaming ops copilot for investigating super-app incidents.
+This app is just me playing with tech, it's not for any serious use.
+
+Imagine a food delivery company like doordash. This chat app's purpose to help back office managers to diagnose operational issues faster. You can ask question like "List delivery delays by area", "Tell me about current driver capacity / availability".
 
 Built with AWS Bedrock, AWS Lambda (response streaming), Aurora DSQL, and CDK.
 
@@ -11,11 +13,19 @@ Built with AWS Bedrock, AWS Lambda (response streaming), Aurora DSQL, and CDK.
 - Lambda function URL supports streaming (SSE is needed for LLM responses) and it's cheaper than having an ALB + Fargate setup.
 - AI SDK is simple, supports AWS Bedrock, can switch models easily. And returning response back in their `DataStreamResponse` format gives is compatibility with use React hooks like `useChat` or even pre-build UI like [assistant-ui](https://github.com/assistant-ui/assistant-ui).
 
+### Codebase structure
+`infra`: AWS CDK code
+`lambda`: AWS lambda server
+`web`: React, Vite code
+`scripts`: Script to add dummy data to database
+
 ## Prerequisites
 
 - Node.js 22+
 - npm 10+
 - AWS credentials configured (`~/.aws/credentials`)
+
+Run shorthand `npm run install-all` for running `npm install` on all sub directories.
 
 ## Configure Once
 
@@ -33,22 +43,9 @@ By default, commands assume:
 You can edit `.env` once and all project scripts will reuse it automatically.
 Do not add `DSQL_ENDPOINT` to `.env`; it is resolved dynamically for local workflows, and injected by CDK for deployed Lambda.
 
-## Install (one command)
-
-```bash
-npm run install-all
-```
-
-This installs dependencies for:
-
-- `lambda`
-- `web`
-- `infra`
-- `scripts`
-
 ## Local Test (quick path)
 
-If you already deployed once before, these are enough:
+You need to run CDK at least once to create DSQL database. Then do:
 
 ```bash
 npm run seed
@@ -62,16 +59,14 @@ Notes:
 - `npm run dev` runs `vite build --watch` and the local Lambda server together, then serves both API and built frontend from `lambda/dev.js`.
 - `npm run seed` auto-resolves `DSQL_ENDPOINT` from CloudFormation stack output (`$STACK_NAME`) if not provided.
 
-## Deploy (quick path)
+## Deploy to AWS
 
 First time in an account/region:
-
 ```bash
 npm run bootstrap
 ```
 
 Every deploy:
-
 ```bash
 npm run deploy
 ```
@@ -85,14 +80,4 @@ After deploy, reseed data:
 
 ```bash
 npm run seed
-```
-
-## Useful Commands
-
-```bash
-npm run build      # build web to lambda/web
-npm run dev        # run local lambda dev server on :3001
-npm run seed       # seed DSQL data
-npm run synth      # cdk synth
-npm run deploy     # cdk deploy
 ```
