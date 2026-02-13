@@ -13,7 +13,6 @@ export class AiChatStack extends cdk.Stack {
     super(scope, id, props);
 
     const ns = props.namespace;
-
     const cluster = new dsql.CfnCluster(this, "DsqlCluster", {
       deletionProtectionEnabled: false,
     });
@@ -27,14 +26,16 @@ export class AiChatStack extends cdk.Stack {
       memorySize: 512,
       environment: {
         DSQL_ENDPOINT: cluster.attrEndpoint,
-        DSQL_REGION: this.region,
       },
     });
+    if (!agentFn.role) {
+      throw new Error("Agent Lambda role was not created.");
+    }
 
     agentFn.addToRolePolicy(
       new iam.PolicyStatement({
-        actions: ["dsql:DbConnectAdmin"],
-        resources: ["*"],
+        actions: ["dsql:DbConnect"],
+        resources: [cluster.attrResourceArn],
       })
     );
 
@@ -57,5 +58,6 @@ export class AiChatStack extends cdk.Stack {
 
     new cdk.CfnOutput(this, "FunctionUrl", { value: fnUrl.url });
     new cdk.CfnOutput(this, "DsqlEndpoint", { value: cluster.attrEndpoint });
+    new cdk.CfnOutput(this, "AgentRoleArn", { value: agentFn.role.roleArn });
   }
 }

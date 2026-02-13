@@ -41,7 +41,6 @@ By default, commands assume:
 - `NAMESPACE=ai-chat`
 
 You can edit `.env` once and all project scripts will reuse it automatically.
-Do not add `DSQL_ENDPOINT` to `.env`; it is resolved dynamically for local workflows, and injected by CDK for deployed Lambda.
 
 ## Local Test (quick path)
 
@@ -57,7 +56,7 @@ Then open `http://localhost:3001`.
 Notes:
 
 - `npm run dev` runs `vite build --watch` and the local Lambda server together, then serves both API and built frontend from `lambda/dev.js`.
-- `npm run seed` auto-resolves `DSQL_ENDPOINT` from CloudFormation stack output (`$STACK_NAME`) if not provided.
+- `npm run seed` creates a read-only DB user (because this can't be done via CDK), attaches IAM to allow lambda to call and populates the DB with dummy data. It auto-resolves `DSQL_ENDPOINT` from CloudFormation stack output (`$STACK_NAME`) if not provided.
 
 ## Deploy to AWS
 
@@ -75,6 +74,7 @@ CDK outputs:
 
 - `FunctionUrl`
 - `DsqlEndpoint`
+- `AgentRoleArn`
 
 After deploy, reseed data:
 

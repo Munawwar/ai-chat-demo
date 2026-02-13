@@ -4,6 +4,10 @@ import {
   CloudFormationClient,
   DescribeStacksCommand,
 } from "@aws-sdk/client-cloudformation";
+import {
+  GetCallerIdentityCommand,
+  STSClient,
+} from "@aws-sdk/client-sts";
 
 function requireEnv(name: string): string {
   const value = process.env[name];
@@ -15,11 +19,33 @@ function requireEnv(name: string): string {
 
 const REGION = requireEnv("AWS_REGION");
 const STACK_NAME = requireEnv("STACK_NAME");
+const DSQL_DB_ROLE = "app_readonly";
+
+function normalizeIamPrincipalArn(value: string): string {
+  if (value.startsWith("arn:aws:iam::")) {
+    return value;
+  }
+
+  const assumedRole = value.match(/^arn:aws:sts::(\d+):assumed-role\/([^/]+)\/.+$/);
+  if (assumedRole) {
+    const [, accountId, roleName] = assumedRole;
+    return `arn:aws:iam::${accountId}:role/${roleName}`;
+  }
+
+  return value;
+}
 
 async function getStackOutput(key: string): Promise<string | undefined> {
   const cfn = new CloudFormationClient({ region: REGION });
   const { Stacks } = await cfn.send(new DescribeStacksCommand({ StackName: STACK_NAME }));
   return Stacks?.[0]?.Outputs?.find((o: { OutputKey?: string }) => o.OutputKey === key)?.OutputValue;
+}
+
+async function getCurrentPrincipalArn(): Promise<string | undefined> {
+  const sts = new STSClient({ region: REGION });
+  const identity = await sts.send(new GetCallerIdentityCommand({}));
+  if (!identity.Arn) return undefined;
+  return normalizeIamPrincipalArn(identity.Arn);
 }
 
 let DSQL_ENDPOINT = process.env.DSQL_ENDPOINT;
@@ -211,6 +237,12 @@ function generateOrders(driverIds: Map<string, string[]>): Order[] {
 }
 
 async function main() {
+  const agentRoleArnOutput = await getStackOutput("AgentRoleArn");
+  const callerArn = await getCurrentPrincipalArn();
+  const principalArns = new Set<string>();
+  if (agentRoleArnOutput) principalArns.add(normalizeIamPrincipalArn(agentRoleArnOutput));
+  if (callerArn) principalArns.add(callerArn);
+
   const signer = new DsqlSigner({ hostname: DSQL_ENDPOINT!, region: REGION });
   const token = await signer.getDbConnectAdminAuthToken();
 
@@ -229,6 +261,28 @@ async function main() {
   console.log("Creating schema...");
   for (const stmt of SCHEMA_STATEMENTS) {
     await client.query(stmt);
+  }
+
+  console.log(`Configuring read-only role '${DSQL_DB_ROLE}'...`);
+  try {
+    await client.query(`CREATE ROLE ${DSQL_DB_ROLE} WITH LOGIN`);
+  } catch (error: unknown) {
+    const duplicateRoleErrorCode = "42710";
+    const code = (error as { code?: string })?.code;
+    if (code !== duplicateRoleErrorCode) {
+      throw error;
+    }
+  }
+  await client.query(`GRANT SELECT ON TABLE orders TO ${DSQL_DB_ROLE}`);
+  await client.query(`GRANT SELECT ON TABLE drivers TO ${DSQL_DB_ROLE}`);
+
+  if (principalArns.size === 0) {
+    console.warn("Warning: no IAM principals found to grant DB role access.");
+  } else {
+    for (const principalArn of principalArns) {
+      await client.query(`AWS IAM GRANT ${DSQL_DB_ROLE} TO '${principalArn}'`);
+      console.log(`Granted role '${DSQL_DB_ROLE}' to ${principalArn}`);
+    }
   }
 
   console.log("Inserting drivers...");

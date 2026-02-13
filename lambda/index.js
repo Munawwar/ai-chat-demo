@@ -10,7 +10,8 @@ const bedrock = createAmazonBedrock({
 });
 
 const DSQL_ENDPOINT = process.env.DSQL_ENDPOINT;
-const DSQL_REGION = process.env.DSQL_REGION ?? process.env.AWS_REGION;
+const AWS_REGION = process.env.AWS_REGION;
+const DSQL_DB_ROLE = "app_readonly";
 
 const MODEL_ID =
   process.env.MODEL_ID ?? "minimax.minimax-m2.1";
@@ -32,20 +33,20 @@ let dbPool = null;
 async function getPool() {
   if (dbPool) return dbPool;
 
-  if (!DSQL_ENDPOINT || !DSQL_REGION) {
-    throw new Error("DSQL_ENDPOINT and DSQL_REGION must be configured.");
+  if (!DSQL_ENDPOINT || !AWS_REGION) {
+    throw new Error("DSQL_ENDPOINT and AWS_REGION must be configured.");
   }
 
   const signer = new DsqlSigner({
     hostname: DSQL_ENDPOINT,
-    region: DSQL_REGION,
+    region: AWS_REGION,
   });
-  const token = await signer.getDbConnectAdminAuthToken();
+  const token = await signer.getDbConnectAuthToken();
 
   dbPool = new pg.Pool({
     host: DSQL_ENDPOINT,
     port: 5432,
-    user: "admin",
+    user: DSQL_DB_ROLE,
     password: token,
     database: "postgres",
     ssl: { rejectUnauthorized: false },
@@ -79,21 +80,27 @@ const tools = {
         .describe("Filter by type (delivery, ride, payment)"),
       hours_ago: z
         .number()
+        .int()
+        .min(1)
+        .max(24)
         .optional()
         .default(3)
-        .describe("How many hours back to look (default 3)"),
+        .describe("How many hours back to look (default 3, min 1, max 24)"),
       limit: z
         .number()
+        .int()
+        .min(1)
+        .max(1000)
         .optional()
         .default(20)
-        .describe("Max rows to return (default 20)"),
+        .describe("Max rows to return (default 20, max 1000)"),
     }),
     execute: async ({ area, status, type, hours_ago, limit }) => {
       const conditions = [
-        `created_at > NOW() - INTERVAL '${hours_ago} hours'`,
+        `created_at > NOW() - ($1::int * INTERVAL '1 hour')`,
       ];
-      const params = [];
-      let i = 1;
+      const params = [hours_ago];
+      let i = 2;
 
       if (area) {
         conditions.push(`area = $${i++}`);
@@ -123,9 +130,12 @@ const tools = {
     inputSchema: z.object({
       hours_ago: z
         .number()
+        .int()
+        .min(1)
+        .max(24)
         .optional()
         .default(1)
-        .describe("How many hours back to look (default 1)"),
+        .describe("How many hours back to look (default 1, min 1, max 24)"),
     }),
     execute: async ({ hours_ago }) => {
       const sql = `
@@ -138,11 +148,11 @@ const tools = {
           ROUND(100.0 * COUNT(*) FILTER (WHERE status = 'pending') / COUNT(*), 1) as pending_rate_pct,
           MODE() WITHIN GROUP (ORDER BY delay_reason) FILTER (WHERE delay_reason IS NOT NULL) as top_delay_reason
         FROM orders
-        WHERE created_at > NOW() - INTERVAL '${hours_ago} hours'
+        WHERE created_at > NOW() - ($1::int * INTERVAL '1 hour')
         GROUP BY area
         ORDER BY avg_delay_min DESC NULLS LAST`;
 
-      return await query(sql);
+      return await query(sql, [hours_ago]);
     },
   }),
 
