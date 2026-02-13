@@ -2,7 +2,7 @@
 
 This app is just me playing with tech, it's not for any serious use.
 
-Imagine a food delivery company like doordash. This chat app's purpose to help back office managers to diagnose operational issues faster. You can ask question like "List delivery delays by area", "Tell me about current driver capacity / availability".
+Imagine a food delivery company like DoorDash. This chat app's purpose is to help back office managers to diagnose operational issues faster. You can ask question like "List delivery delays by area", "Tell me about current driver capacity / availability".
 
 Built with AWS Bedrock, AWS Lambda (response streaming), Aurora DSQL, and CDK.
 
@@ -81,3 +81,8 @@ After deploy, reseed data:
 ```bash
 npm run seed
 ```
+
+## Security Notes
+
+- LLM tool gets a very limited tool to query database. It does not have direct DB query access. 
+- Let's say we wanted to build a tool that has full read-access to DB, then you can see that I restricted the Lambda's IAM permissions access to read-only access to DB.
