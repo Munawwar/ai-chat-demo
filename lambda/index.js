@@ -97,7 +97,9 @@ const tools = {
     }),
     execute: async ({ area, status, type, hours_ago, limit }) => {
       const conditions = [
-        `created_at > NOW() - ($1::int * INTERVAL '1 hour')`,
+        // `created_at > NOW() - ($1::int * INTERVAL '1 hour')`,
+        // For demo purpose, we use the max created_at from the orders table
+        `created_at > (SELECT MAX(created_at) FROM orders) - ($1::int * INTERVAL '1 hour')`,
       ];
       const params = [hours_ago];
       let i = 2;
@@ -138,6 +140,8 @@ const tools = {
         .describe("How many hours back to look (default 1, min 1, max 24)"),
     }),
     execute: async ({ hours_ago }) => {
+      // We are using "SELECT MAX(created_at) FROM orders"  instead of NOW() in the where clause
+      // for demo purpose
       const sql = `
         SELECT
           area,
@@ -148,7 +152,7 @@ const tools = {
           ROUND(100.0 * COUNT(*) FILTER (WHERE status = 'pending') / COUNT(*), 1) as pending_rate_pct,
           MODE() WITHIN GROUP (ORDER BY delay_reason) FILTER (WHERE delay_reason IS NOT NULL) as top_delay_reason
         FROM orders
-        WHERE created_at > NOW() - ($1::int * INTERVAL '1 hour')
+        WHERE created_at > (SELECT MAX(created_at) FROM orders) - ($1::int * INTERVAL '1 hour')
         GROUP BY area
         ORDER BY avg_delay_min DESC NULLS LAST`;
 
