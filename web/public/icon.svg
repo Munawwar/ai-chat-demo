@@ -1,8 +1,39 @@
-<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 32 32" fill="none">
-  <rect width="32" height="32" rx="8" fill="#1b7d5f"/>
-  <circle cx="16" cy="16" r="3" fill="#fff"/>
-  <path d="M16 9a7 7 0 0 1 7 7" stroke="#fff" stroke-width="2" stroke-linecap="round" opacity="0.9"/>
-  <path d="M16 5a11 11 0 0 1 11 11" stroke="#fff" stroke-width="2" stroke-linecap="round" opacity="0.5"/>
-  <path d="M16 23a7 7 0 0 1-7-7" stroke="#fff" stroke-width="2" stroke-linecap="round" opacity="0.9"/>
-  <path d="M16 27a11 11 0 0 1-11-11" stroke="#fff" stroke-width="2" stroke-linecap="round" opacity="0.5"/>
+<svg width="256" height="256" viewBox="0 0 256 256" fill="none" xmlns="http://www.w3.org/2000/svg">
+  <defs>
+    <filter id="hazard-glow" x="-20%" y="-20%" width="140%" height="140%">
+      <feGaussianBlur stdDeviation="4" result="blur" />
+      <feComposite in="SourceGraphic" in2="blur" operator="over" />
+    </filter>
+  </defs>
+  
+  <!-- Background Shield -->
+  <path d="M128 24L224 64V128C224 184 182 232 128 248C74 232 32 184 32 128V64L128 24Z" 
+        fill="#18181b" 
+        stroke="#f59e0b" 
+        stroke-width="8"
+        stroke-linejoin="round"/>
+        
+  <!-- Core Symbol: Warning/Ops Diamond -->
+  <rect x="128" y="128" width="80" height="80" 
+        transform="translate(-40 -40) rotate(45 128 128)" 
+        fill="none" 
+        stroke="#f59e0b" 
+        stroke-width="8"/>
+        
+  <!-- Center Eye/Sensor -->
+  <circle cx="128" cy="128" r="16" fill="#f59e0b" filter="url(#hazard-glow)">
+    <animate attributeName="opacity" values="1;0.5;1" dur="2s" repeatCount="indefinite" />
+  </circle>
+  
+  <!-- Technical Data Lines -->
+  <path d="M72 128H96M160 128H184M128 72V96M128 160V184" 
+        stroke="#71717a" 
+        stroke-width="4" 
+        stroke-linecap="round"/>
+        
+  <!-- Corners -->
+  <path d="M50 80L50 60L70 60" stroke="#f59e0b" stroke-width="4" fill="none"/>
+  <path d="M206 80L206 60L186 60" stroke="#f59e0b" stroke-width="4" fill="none"/>
+  <path d="M50 176L50 196L70 196" stroke="#f59e0b" stroke-width="4" fill="none"/>
+  <path d="M206 176L206 196L186 196" stroke="#f59e0b" stroke-width="4" fill="none"/>
 </svg>
