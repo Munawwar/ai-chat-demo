@@ -30,8 +30,11 @@ export default function App() {
   return (
     <div className="app">
       <header>
-        <h1>AI Ops Copilot</h1>
-        <p className="subtitle">Dubai Food Delivery Operations</p>
+        <img src="/icon.svg" alt="" className="header-icon" />
+        <div>
+          <h1>AI Ops Copilot</h1>
+          <p className="subtitle">Dubai Food Delivery Operations</p>
+        </div>
       </header>
 
       <div className="messages">
@@ -109,7 +112,9 @@ export default function App() {
         {isLoading && messages[messages.length - 1]?.role !== "assistant" && (
           <div className="message assistant">
             <div className="message-role">Copilot</div>
-            <div className="message-content loading">Thinking...</div>
+            <div className="message-content loading">
+              <span className="typing-dots"><span>.</span><span>.</span><span>.</span></span>
+            </div>
           </div>
         )}
         <div ref={messagesEndRef} />
@@ -122,8 +127,10 @@ export default function App() {
           placeholder="Ask about operations..."
           disabled={isLoading}
         />
-        <button type="submit" disabled={isLoading || !input.trim()}>
-          Send
+        <button type="submit" disabled={isLoading || !input.trim()} aria-label="Send">
+          <svg width="18" height="18" viewBox="0 0 20 20" fill="none" xmlns="http://www.w3.org/2000/svg">
+            <path d="M2 18L19 10L2 2V8.5L14 10L2 11.5V18Z" fill="currentColor"/>
+          </svg>
         </button>
       </form>
     </div>

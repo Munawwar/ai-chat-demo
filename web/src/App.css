@@ -2,7 +2,7 @@
   display: flex;
   flex-direction: column;
   height: 100vh;
-  max-width: 860px;
+  max-width: 960px;
   margin: 0 auto;
   width: 100%;
 }
@@ -10,23 +10,34 @@
 /* ── header ── */
 
 header {
-  padding: 1.25rem 1.5rem 1rem;
+  padding: 0.75rem 1.25rem;
+  margin: 0.5rem 0.5rem 0;
   display: flex;
-  align-items: baseline;
+  align-items: center;
   gap: 0.75rem;
-  border-bottom: 1px solid #e8e8e8;
+  border: 1px solid rgba(0,0,0,0.06);
+  border-radius: 14px;
+  background: rgba(255,255,255,0.65);
+  backdrop-filter: blur(8px);
+}
+
+.header-icon {
+  width: 32px;
+  height: 32px;
+  flex-shrink: 0;
 }
 
 header h1 {
-  font-size: 1.1rem;
+  font-size: 1.05rem;
   font-weight: 700;
   color: #1a1a1a;
   letter-spacing: -0.01em;
+  line-height: 1.2;
 }
 
 .subtitle {
-  font-size: 0.85rem;
-  color: #888;
+  font-size: 0.78rem;
+  color: #999;
   font-weight: 400;
 }
 
@@ -35,10 +46,12 @@ header h1 {
 .messages {
   flex: 1;
   overflow-y: auto;
-  padding: 0.5rem 1.5rem 1.5rem;
+  padding: 1rem 1.25rem 1.5rem;
   display: flex;
   flex-direction: column;
-  gap: 0.125rem;
+  gap: 0.5rem;
+  background-color: #eae6df;
+  background-image: url("data:image/svg+xml,%3Csvg width='40' height='40' xmlns='http://www.w3.org/2000/svg'%3E%3Cpath d='M20 5v4M20 31v4M5 20h4M31 20h4M10 10l2.5 2.5M27.5 27.5l2.5 2.5M10 30l2.5-2.5M27.5 12.5l2.5-2.5' stroke='%23d5d0c6' stroke-width='0.5' stroke-linecap='round'/%3E%3Ccircle cx='20' cy='20' r='1' fill='%23d5d0c6'/%3E%3C/svg%3E");
 }
 
 .empty-state {
@@ -47,33 +60,41 @@ header h1 {
   align-items: center;
   justify-content: center;
   flex: 1;
-  gap: 1.25rem;
-  color: #666;
+  gap: 1rem;
+  color: #777;
   font-size: 0.95rem;
+  padding: 2rem;
+}
+
+.empty-state p {
+  background: rgba(255,255,255,0.7);
+  padding: 0.6rem 1.2rem;
+  border-radius: 12px;
 }
 
 .suggestions {
   display: flex;
   flex-wrap: wrap;
-  gap: 0.375rem;
+  gap: 0.5rem;
   justify-content: center;
 }
 
 .suggestions button {
   background: #fff;
-  border: 1px solid #ddd;
-  color: #444;
-  padding: 0.5rem 0.85rem;
-  border-radius: 4px;
+  border: 1px solid #d5d0c8;
+  color: #555;
+  padding: 0.5rem 1rem;
+  border-radius: 20px;
   cursor: pointer;
-  font-size: 0.9rem;
+  font-size: 0.85rem;
   transition: all 0.15s;
+  box-shadow: 0 1px 2px rgba(0,0,0,0.04);
 }
 
 .suggestions button:hover {
-  border-color: #bbb;
-  color: #1a1a1a;
-  background: #f8f8f8;
+  border-color: #1b7d5f;
+  color: #1b7d5f;
+  background: #f0faf6;
 }
 
 /* ── message ── */
@@ -81,38 +102,80 @@ header h1 {
 .message {
   display: flex;
   flex-direction: column;
-  gap: 0;
-  padding: 0.75rem 0;
+  gap: 0.25rem;
+  max-width: 80%;
+  animation: msgIn 0.2s ease-out;
+}
+
+@keyframes msgIn {
+  from { opacity: 0; transform: translateY(6px); }
+  to { opacity: 1; transform: translateY(0); }
 }
 
 .message + .message {
-  border-top: 1px solid #eee;
+  border-top: none;
+}
+
+.message.user {
+  align-self: flex-end;
+  align-items: flex-end;
+}
+
+.message.assistant {
+  align-self: flex-start;
+  align-items: flex-start;
 }
 
 .message-role {
-  font-size: 0.75rem;
+  font-size: 0.7rem;
   font-weight: 600;
   letter-spacing: 0.04em;
   text-transform: uppercase;
-  margin-bottom: 0.3rem;
+  padding: 0 0.25rem;
 }
 
-.message.user .message-role { color: #999; }
-.message.assistant .message-role { color: #2a7a5a; }
+.message.user .message-role { color: #1b7d5f; }
+.message.assistant .message-role { color: #888; }
 
 .message-content {
   font-size: 0.95rem;
   line-height: 1.7;
-  color: #333;
+  padding: 0.7rem 1rem;
 }
 
 .message.user .message-content {
-  color: #555;
+  background: #1b7d5f;
+  color: #fff;
+  border-radius: 18px 18px 4px 18px;
+}
+
+.message.assistant .message-content {
+  background: #fff;
+  color: #2d2d2d;
+  border-radius: 18px 18px 18px 4px;
+  box-shadow: 0 1px 3px rgba(0,0,0,0.06);
+  font-size: 0.95rem;
+  line-height: 1.7;
 }
 
 .loading {
   color: #999;
-  font-style: italic;
+  font-style: normal;
+  font-family: -apple-system, "Segoe UI", Roboto, Helvetica, Arial, sans-serif;
+}
+
+.typing-dots span {
+  animation: blink 1.4s infinite both;
+  font-size: 1.4em;
+  letter-spacing: 2px;
+  line-height: 1;
+}
+.typing-dots span:nth-child(2) { animation-delay: 0.2s; }
+.typing-dots span:nth-child(3) { animation-delay: 0.4s; }
+
+@keyframes blink {
+  0%, 80%, 100% { opacity: 0.2; }
+  40% { opacity: 1; }
 }
 
 /* ── markdown text ── */
@@ -145,19 +208,23 @@ header h1 {
   font-weight: 600;
 }
 
+.message.user .text-part strong {
+  color: #fff;
+}
+
 .text-part code {
-  background: #f3f3f3;
+  background: #f0eeea;
   padding: 0.15em 0.4em;
   border-radius: 3px;
-  font-size: 0.85em;
+  font-size: 0.82em;
   font-family: "SF Mono", "Fira Code", "Consolas", monospace;
   color: #8b3daa;
 }
 
 .text-part pre {
-  background: #f7f7f7;
-  border: 1px solid #e5e5e5;
-  border-radius: 4px;
+  background: #f7f6f3;
+  border: 1px solid #e8e6e1;
+  border-radius: 6px;
   padding: 0.6rem 0.75rem;
   overflow-x: auto;
 }
@@ -174,6 +241,7 @@ header h1 {
   color: #1a1a1a;
   font-weight: 600;
   margin: 0.75rem 0 0.25rem;
+  font-family: -apple-system, "Segoe UI", Roboto, Helvetica, Arial, sans-serif;
 }
 
 .text-part h2 { font-size: 1.05rem; }
@@ -183,17 +251,18 @@ header h1 {
 
 .tool-part {
   margin: 0.375rem 0;
-  border: 1px solid #e5e5e5;
-  border-radius: 4px;
+  border: 1px solid #e8e6e1;
+  border-radius: 8px;
   overflow: hidden;
+  font-family: -apple-system, "Segoe UI", Roboto, Helvetica, Arial, sans-serif;
 }
 
 .tool-part summary {
-  padding: 0.45rem 0.65rem;
-  background: #fafafa;
+  padding: 0.4rem 0.65rem;
+  background: #f9f8f5;
   cursor: pointer;
-  color: #666;
-  font-size: 0.85rem;
+  color: #888;
+  font-size: 0.8rem;
   list-style: none;
   display: flex;
   align-items: center;
@@ -205,8 +274,8 @@ header h1 {
 .tool-part summary::before {
   content: ">";
   font-family: monospace;
-  color: #bbb;
-  font-size: 0.8rem;
+  color: #ccc;
+  font-size: 0.75rem;
 }
 
 .tool-part[open] summary::before {
@@ -214,17 +283,17 @@ header h1 {
 }
 
 .tool-name {
-  color: #2a7a5a;
+  color: #1b7d5f;
   font-weight: 500;
   font-family: "SF Mono", "Fira Code", "Consolas", monospace;
-  font-size: 0.85rem;
+  font-size: 0.8rem;
 }
 
 .tool-args {
   padding: 0.5rem 0.65rem;
-  font-size: 0.8rem;
-  color: #888;
-  background: #f7f7f7;
+  font-size: 0.75rem;
+  color: #999;
+  background: #f9f8f5;
   overflow-x: auto;
   font-family: "SF Mono", "Fira Code", "Consolas", monospace;
   border-top: 1px solid #eee;
@@ -234,6 +303,7 @@ header h1 {
   padding: 0.5rem;
   overflow-x: auto;
   border-top: 1px solid #eee;
+  font-family: -apple-system, "Segoe UI", Roboto, Helvetica, Arial, sans-serif;
 }
 
 /* ── tables ── */
@@ -246,7 +316,7 @@ header h1 {
 .text-part table {
   width: 100%;
   border-collapse: collapse;
-  font-size: 0.85rem;
+  font-size: 0.82rem;
   font-family: "SF Mono", "Fira Code", "Consolas", monospace;
 }
 
@@ -262,10 +332,10 @@ header h1 {
 
 .tool-result th,
 .text-part th {
-  color: #888;
+  color: #999;
   font-weight: 600;
   text-transform: capitalize;
-  font-size: 0.78rem;
+  font-size: 0.75rem;
 }
 
 .tool-result td,
@@ -278,24 +348,29 @@ header h1 {
 .input-form {
   display: flex;
   gap: 0.5rem;
-  padding: 0.75rem 1.5rem 1rem;
-  border-top: 1px solid #e8e8e8;
+  padding: 0.75rem 1.25rem;
+  margin: 0 0.5rem 0.5rem;
+  border: 1px solid rgba(0,0,0,0.06);
+  border-radius: 14px;
+  background: rgba(255,255,255,0.65);
+  backdrop-filter: blur(8px);
 }
 
 .input-form input {
   flex: 1;
-  padding: 0.65rem 0.85rem;
+  padding: 0.65rem 1rem;
   border: 1px solid #ddd;
-  border-radius: 4px;
-  background: #fff;
+  border-radius: 24px;
+  background: #f8f8f6;
   color: #1a1a1a;
   font-size: 0.95rem;
   outline: none;
-  transition: border-color 0.15s;
+  transition: border-color 0.15s, background 0.15s;
 }
 
 .input-form input:focus {
-  border-color: #999;
+  border-color: #1b7d5f;
+  background: #fff;
 }
 
 .input-form input::placeholder {
@@ -303,24 +378,26 @@ header h1 {
 }
 
 .input-form button {
-  padding: 0.65rem 1.25rem;
-  border: 1px solid #ddd;
-  border-radius: 4px;
-  background: #f5f5f5;
-  color: #444;
-  font-weight: 500;
-  font-size: 0.95rem;
+  width: 42px;
+  height: 42px;
+  border: none;
+  border-radius: 50%;
+  background: #1b7d5f;
+  color: #fff;
+  font-size: 1.1rem;
   cursor: pointer;
-  transition: all 0.15s;
+  transition: background 0.15s;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  flex-shrink: 0;
 }
 
 .input-form button:hover:not(:disabled) {
-  border-color: #bbb;
-  background: #eee;
-  color: #1a1a1a;
+  background: #166b50;
 }
 
 .input-form button:disabled {
-  opacity: 0.3;
+  background: #ccc;
   cursor: not-allowed;
 }
