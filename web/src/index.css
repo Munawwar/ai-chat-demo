@@ -45,12 +45,48 @@ body {
   background-size: 40px 40px;
   background-position: center top;
   color: var(--text-primary);
+  overflow: hidden; /* For boot animation */
+}
+
+/* CRT Overlay */
+body::after {
+  content: "";
+  position: fixed;
+  top: 0;
+  left: 0;
+  width: 100vw;
+  height: 100vh;
+  background: repeating-linear-gradient(
+    0deg,
+    rgba(0, 0, 0, 0.15),
+    rgba(0, 0, 0, 0.15) 1px,
+    transparent 1px,
+    transparent 2px
+  );
+  pointer-events: none;
+  z-index: 999;
+}
+
+/* Boot Sequence */
+@keyframes bootUp {
+  0% { opacity: 0; filter: blur(10px); }
+  50% { opacity: 0.5; filter: blur(5px); }
+  100% { opacity: 1; filter: blur(0); }
+}
+
+@keyframes glitch {
+  0% { text-shadow: 2px 0 0 red, -2px 0 0 cyan; }
+  25% { text-shadow: -2px 0 0 red, 2px 0 0 cyan; }
+  50% { text-shadow: 2px 0 0 red, -2px 0 0 cyan; }
+  75% { text-shadow: -2px 0 0 red, 2px 0 0 cyan; }
+  100% { text-shadow: 2px 0 0 red, -2px 0 0 cyan; }
 }
 
 #root {
   height: 100vh;
   display: flex;
   flex-direction: column;
+  animation: bootUp 0.5s ease-out forwards;
 }
 
 /* Scrollbar Styling */

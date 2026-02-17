@@ -14,33 +14,52 @@
 /* ── HUD HEADER ── */
 
 header {
-  padding: 1.25rem 2rem;
-  margin: 1rem 1rem 0;
+  padding: 1.5rem 2.5rem;
+  margin: 1.5rem;
   display: flex;
   align-items: center;
-  gap: 1.25rem;
-  background: rgba(9, 9, 11, 0.95); /* Nearly Opaque Void */
+  gap: 1.5rem;
+  background: rgba(9, 9, 11, 0.95);
   border: 1px solid var(--border-subtle);
-  border-bottom: 2px solid var(--accent-ops); /* Amber Operations Bar */
-  border-radius: 4px; /* Hard Technical Corners */
+  border-bottom: 2px solid var(--accent-ops);
+  clip-path: polygon(
+    0 0, 
+    100% 0, 
+    100% calc(100% - 15px), 
+    calc(100% - 15px) 100%, 
+    15px 100%, 
+    0 calc(100% - 15px)
+  ); /* Sci-fi Shape */
   box-shadow: 0 4px 20px rgba(0, 0, 0, 0.5);
   z-index: 50;
   backdrop-filter: blur(8px);
+  position: relative;
+}
+
+header::before {
+  content: "SYS.ONLINE";
+  position: absolute;
+  top: 5px;
+  right: 15px;
+  font-family: var(--font-mono);
+  font-size: 0.6rem;
+  color: var(--accent-ops);
+  opacity: 0.7;
 }
 
 .header-icon {
-  width: 40px;
-  height: 40px;
+  width: 48px;
+  height: 48px;
   flex-shrink: 0;
   border: 1px solid var(--accent-ops);
   padding: 4px;
-  border-radius: 2px;
   background: var(--bg-surface);
+  box-shadow: 0 0 10px var(--accent-glow);
 }
 
 header h1 {
   font-family: var(--font-display);
-  font-size: 1.5rem;
+  font-size: 1.8rem;
   font-weight: 700;
   color: var(--text-primary);
   letter-spacing: -0.02em;
@@ -49,21 +68,26 @@ header h1 {
   display: flex;
   align-items: center;
   gap: 0.5rem;
+  position: relative;
+}
+
+header h1:hover {
+  animation: glitch 0.3s cubic-bezier(.25, .46, .45, .94) both infinite;
 }
 
 header h1::after {
   content: "LIVE";
-  font-size: 0.6em;
+  font-size: 0.5em;
   font-family: var(--font-mono);
   background: rgba(245, 158, 11, 0.2);
   color: var(--accent-ops);
-  padding: 2px 6px;
-  border-radius: 2px;
-  margin-left: 8px;
+  padding: 2px 8px;
+  margin-left: 12px;
   border: 1px solid var(--accent-ops);
   font-weight: 500;
-  letter-spacing: 0.05em;
+  letter-spacing: 0.1em;
   animation: pulse 2s infinite;
+  clip-path: polygon(10% 0, 100% 0, 100% 70%, 90% 100%, 0 100%, 0 30%);
 }
 
 @keyframes pulse {
@@ -92,12 +116,10 @@ header h1::after {
   display: flex;
   flex-direction: column;
   gap: 2rem;
-  /* Scanline Overlay (Subtle) */
-  background: repeating-linear-gradient(
-    transparent,
-    transparent 2px,
-    rgba(0, 0, 0, 0.1) 3px
-  );
+  background: 
+    linear-gradient(rgba(18, 16, 16, 0) 50%, rgba(0, 0, 0, 0.25) 50%),
+    linear-gradient(90deg, rgba(255, 0, 0, 0.06), rgba(0, 255, 0, 0.02), rgba(0, 0, 255, 0.06));
+  background-size: 100% 2px, 3px 100%;
 }
 
 .empty-state {
@@ -106,24 +128,37 @@ header h1::after {
   align-items: center;
   justify-content: center;
   flex: 1;
-  gap: 2rem;
-  color: var(--text-muted);
+  gap: 3rem;
+  color: var(--text-secondary);
   font-family: var(--font-mono);
-  font-size: 0.9rem;
-  padding: 2rem;
+  font-size: 1rem;
+  padding: 4rem;
   text-align: center;
   border: 1px dashed var(--border-subtle);
   background: rgba(24, 24, 27, 0.5);
-  margin: 2rem;
-  border-radius: 8px;
+  margin: 2rem auto;
+  max-width: 800px;
+  border-radius: 4px;
+  position: relative;
+}
+
+.empty-state::before {
+  content: "STANDBY MODE // AWAITING INPUT";
+  position: absolute;
+  top: -10px;
+  background: var(--bg-void);
+  padding: 0 1rem;
+  color: var(--accent-ops);
+  font-size: 0.8rem;
+  letter-spacing: 0.2em;
 }
 
 .empty-state p {
   background: var(--bg-panel);
-  padding: 0.75rem 1.5rem;
+  padding: 1rem 2rem;
   border: 1px solid var(--border-subtle);
-  border-radius: 4px;
-  color: var(--text-secondary);
+  color: var(--text-primary);
+  box-shadow: 0 0 15px rgba(0,0,0,0.5);
 }
 
 .suggestions {
@@ -131,43 +166,36 @@ header h1::after {
   flex-wrap: wrap;
   gap: 1rem;
   justify-content: center;
-  max-width: 700px;
 }
 
 .suggestions button {
   background: var(--bg-surface);
   border: 1px solid var(--border-subtle);
-  color: var(--text-secondary);
-  padding: 0.75rem 1.25rem;
-  border-radius: 2px; /* Tech Corners */
+  color: var(--text-muted);
+  padding: 1rem 1.5rem;
   cursor: pointer;
   font-family: var(--font-mono);
-  font-size: 0.8rem;
+  font-size: 0.85rem;
   text-transform: uppercase;
   letter-spacing: 0.05em;
-  transition: all 0.2s ease;
+  transition: all 0.2s cubic-bezier(0.4, 0, 0.2, 1);
   position: relative;
   overflow: hidden;
-}
-
-.suggestions button::before {
-  content: "";
-  position: absolute;
-  left: 0; top: 0; bottom: 0; width: 4px;
-  background: var(--accent-ops);
-  opacity: 0;
-  transition: opacity 0.2s;
+  clip-path: polygon(
+    10px 0, 100% 0, 
+    100% calc(100% - 10px), 
+    calc(100% - 10px) 100%, 
+    0 100%, 
+    0 10px
+  );
 }
 
 .suggestions button:hover {
   border-color: var(--accent-ops);
-  color: var(--text-primary);
-  background: var(--bg-panel);
-  padding-left: 1.5rem;
-}
-
-.suggestions button:hover::before {
-  opacity: 1;
+  color: var(--accent-active);
+  background: rgba(245, 158, 11, 0.1);
+  transform: translateY(-2px);
+  box-shadow: 0 4px 12px var(--accent-glow);
 }
 
 /* ── MESSAGE LOGS ── */
@@ -178,6 +206,13 @@ header h1::after {
   gap: 0.5rem;
   max-width: 90%;
   position: relative;
+  /* Tech Reveal Animation */
+  animation: logReveal 0.4s cubic-bezier(0.2, 0.8, 0.2, 1);
+}
+
+@keyframes logReveal {
+  from { opacity: 0; transform: translateX(-20px); clip-path: inset(0 100% 0 0); }
+  to { opacity: 1; transform: translateX(0); clip-path: inset(0 0 0 0); }
 }
 
 .message + .message {
@@ -204,78 +239,134 @@ header h1::after {
   display: flex;
   align-items: center;
   gap: 8px;
+  opacity: 0.8;
 }
 
-.message.user .message-role { color: var(--accent-ops); }
+.message.user .message-role { color: var(--accent-ops); flex-direction: row-reverse; }
 .message.assistant .message-role { color: var(--text-secondary); }
 
 .message-role::before {
-  content: "";
-  display: block;
-  width: 6px;
-  height: 6px;
-  background: currentColor;
-  box-shadow: 0 0 8px currentColor;
+  content: "ID::" attr(data-id); /* Quirky fake ID */
+  font-size: 0.6em;
+  color: var(--text-muted);
 }
 
 .message-content {
   font-size: 1rem;
   line-height: 1.6;
-  padding: 1.25rem 1.5rem;
+  padding: 1.5rem;
   position: relative;
-  border: 1px solid var(--border-subtle);
-  /* Tech Background */
-  background: var(--bg-surface);
-  box-shadow: 0 4px 12px rgba(0,0,0,0.2);
+  border: 1px solid var(--border-active);
+  background: rgba(18, 18, 20, 0.9);
+  backdrop-filter: blur(4px);
+  box-shadow: 0 4px 30px rgba(0,0,0,0.4);
+  /* Tech Grid Overlay on Message */
+  background-image: linear-gradient(rgba(255,255,255,0.03) 1px, transparent 1px);
+  background-size: 100% 20px;
 }
 
+/* User Message Specifics */
 .message.user .message-content {
-  background: rgba(245, 158, 11, 0.05); /* Very subtle Amber tint */
-  border-color: rgba(245, 158, 11, 0.3);
-  color: var(--text-primary);
-  border-radius: 8px 0 8px 8px; /* Tech Shape */
-  border-right: 2px solid var(--accent-ops);
+  background: rgba(245, 158, 11, 0.08);
+  border-color: var(--accent-ops);
+  border-right-width: 4px;
+  clip-path: polygon(
+    10px 0, 100% 0, 
+    100% calc(100% - 10px), 
+    calc(100% - 10px) 100%, 
+    0 100%, 
+    0 10px
+  );
+  color: #fff;
+  text-shadow: 0 0 10px rgba(245, 158, 11, 0.3);
 }
 
+.message.user .message-content::after {
+  content: "USER_AUTH_OK";
+  position: absolute;
+  bottom: 2px;
+  right: 5px;
+  font-size: 0.5rem;
+  color: var(--accent-ops);
+  opacity: 0.5;
+  font-family: var(--font-mono);
+}
+
+/* Assistant Message Specifics */
 .message.assistant .message-content {
-  background: var(--bg-panel);
-  color: var(--text-primary);
-  border-radius: 0 8px 8px 8px; /* Tech Shape */
-  border-left: 2px solid var(--border-active);
+  background: var(--bg-surface);
+  border-left: 4px solid var(--border-active);
+  clip-path: polygon(
+    0 0, 
+    calc(100% - 10px) 0, 
+    100% 10px, 
+    100% 100%, 
+    10px 100%, 
+    0 calc(100% - 10px)
+  );
 }
 
-/* Loading / Typing */
+.message.assistant .message-content::before {
+  content: "SYS_RESPONSE";
+  position: absolute;
+  top: 0;
+  left: 0;
+  background: var(--border-active);
+  color: #000;
+  font-size: 0.6rem;
+  padding: 0 4px;
+  font-family: var(--font-mono);
+  font-weight: 700;
+}
+
+/* ── LOADING ANIMATION ── */
 .loading {
   color: var(--text-muted);
   font-family: var(--font-mono);
   font-size: 0.8rem;
   display: flex;
   align-items: center;
-  gap: 0.75rem;
+  gap: 0.5rem;
   border: 1px dashed var(--border-subtle);
-  padding: 0.75rem 1.5rem;
-  border-radius: 4px;
+  padding: 1rem;
+  background: rgba(0,0,0,0.5);
+  position: relative;
+  overflow: hidden;
 }
 
 .loading::before {
-  content: "PROCESSING";
-  font-weight: 700;
-  letter-spacing: 0.1em;
+  content: "";
+  position: absolute;
+  top: 0;
+  left: -100%;
+  width: 100%;
+  height: 100%;
+  background: linear-gradient(90deg, transparent, rgba(245, 158, 11, 0.1), transparent);
+  animation: scan 1.5s infinite linear;
 }
 
-.typing-dots span {
-  opacity: 0;
-  animation: blinkDots 1s infinite;
-  color: var(--accent-ops);
-  font-weight: bold;
+@keyframes scan {
+  0% { left: -100%; }
+  100% { left: 100%; }
 }
-.typing-dots span:nth-child(2) { animation-delay: 0.2s; }
-.typing-dots span:nth-child(3) { animation-delay: 0.4s; }
 
-@keyframes blinkDots {
-  0%, 100% { opacity: 0; }
-  50% { opacity: 1; }
+.typing-dots {
+  display: inline-block;
+  min-width: 20px;
 }
+.typing-dots::after {
+  content: "PROCESSING...";
+  animation: typeText 1.5s steps(3, end) infinite;
+}
+
+@keyframes typeText {
+  0% { content: "PROC"; }
+  33% { content: "PROCES"; }
+  66% { content: "PROCESS"; }
+  100% { content: "PROCESSING"; }
+}
+
+.typing-dots span { display: none; } /* Hide old dots */
 
 
 /* ── MARKDOWN / DATA ── */
@@ -288,126 +379,179 @@ header h1::after {
 .text-part > :last-child { margin-bottom: 0; }
 
 .text-part p, ul, ol, pre, table {
-  margin: 1rem 0;
+  margin: 1.5rem 0;
 }
 
 .text-part ul, .text-part ol {
-  padding-left: 1.25rem;
-  border-left: 1px solid var(--border-subtle);
+  padding-left: 1.5rem;
+  border-left: 1px dashed var(--border-subtle);
   margin-left: 0.5rem;
 }
 
 .text-part li {
   margin: 0.5rem 0;
   padding-left: 0.5rem;
+  position: relative;
 }
-.text-part li::marker {
+.text-part li::before {
+  content: ">";
   color: var(--accent-ops);
+  position: absolute;
+  left: -1rem;
+  font-family: monospace;
 }
+.text-part li::marker { content: ""; } /* Hide default */
 
 .text-part strong {
-  color: var(--accent-ops); /* Highlight Key Data */
+  color: var(--accent-ops);
   font-weight: 700;
+  background: rgba(245, 158, 11, 0.1);
+  padding: 0 4px;
 }
 
 .text-part code {
-  background: rgba(0, 0, 0, 0.3);
+  background: #000;
   padding: 0.2em 0.5em;
-  border-radius: 2px;
+  border: 1px solid var(--border-subtle);
   font-size: 0.85em;
   font-family: var(--font-mono);
-  color: var(--accent-active);
-  border: 1px solid var(--border-subtle);
+  color: #4ade80; /* Matrix Green */
+  box-shadow: 0 0 5px rgba(74, 222, 128, 0.2);
 }
 
 .text-part pre {
-  background: #000; /* Pitch Black Terminal */
-  border: 1px solid var(--border-active);
-  border-radius: 4px;
-  padding: 1rem;
+  background: #000;
+  border: 1px solid var(--accent-ops);
+  padding: 1.5rem;
   overflow-x: auto;
-  margin: 1.5rem 0;
+  margin: 2rem 0;
   position: relative;
+  /* Scanlines inside code blocks */
+  background-image: repeating-linear-gradient(
+    transparent,
+    transparent 2px,
+    rgba(74, 222, 128, 0.05) 3px
+  );
 }
+
 .text-part pre::before {
-  content: "TERMINAL_OUTPUT";
+  content: "TERMINAL_OUTPUT // READ_ONLY";
   position: absolute;
   top: 0;
   right: 0;
-  background: var(--border-subtle);
-  color: var(--text-secondary);
+  background: var(--accent-ops);
+  color: #000;
   font-size: 0.6rem;
-  padding: 2px 6px;
+  padding: 2px 8px;
   font-family: var(--font-mono);
-  border-bottom-left-radius: 4px;
+  font-weight: 700;
 }
 
 .text-part h1, h2, h3 {
   font-family: var(--font-display);
-  color: var(--text-primary);
+  color: #fff;
   font-weight: 700;
-  margin: 2rem 0 1rem;
-  border-bottom: 1px solid var(--border-subtle);
+  margin: 2.5rem 0 1rem;
+  border-bottom: 2px solid var(--border-subtle);
   padding-bottom: 0.5rem;
+  text-transform: uppercase;
+  letter-spacing: -0.02em;
 }
-.text-part h1 { font-size: 1.4rem; color: var(--accent-ops); border-bottom-color: var(--accent-ops); }
-.text-part h2 { font-size: 1.2rem; }
-.text-part h3 { font-size: 1rem; text-transform: uppercase; letter-spacing: 0.05em; color: var(--text-secondary); }
+
+.text-part h1 { 
+  font-size: 1.5rem; 
+  color: var(--accent-ops); 
+  border-bottom-color: var(--accent-ops);
+  display: inline-block;
+  padding-right: 2rem;
+}
+
+.text-part h2 { font-size: 1.25rem; }
+.text-part h3 { font-size: 1rem; color: var(--text-secondary); border: none; }
 
 /* ── TOOL CALLS (SYSTEM LOGS) ── */
 
 .tool-part {
-  margin: 1rem 0;
+  margin: 1.5rem 0;
   border: 1px solid var(--border-subtle);
-  border-radius: 4px;
-  background: #111; /* Darker than panel */
+  background: #000;
   font-family: var(--font-mono);
-  font-size: 0.85rem;
+  font-size: 0.8rem;
+  position: relative;
+  /* Tech Frame */
+  box-shadow: 0 0 0 1px #000, 0 0 0 2px var(--border-subtle);
+}
+
+.tool-part::before {
+  content: "PROCESS::RUNNING";
+  position: absolute;
+  top: -8px;
+  right: 10px;
+  background: #000;
+  color: var(--accent-ops);
+  font-size: 0.6rem;
+  padding: 0 4px;
+  border: 1px solid var(--border-subtle);
+  animation: blink 1s infinite;
+}
+
+.tool-part[open]::before {
+  content: "PROCESS::COMPLETE";
+  color: #4ade80; /* Green for complete */
+  animation: none;
+  border-color: #4ade80;
 }
 
 .tool-part summary {
-  padding: 0.6rem 1rem;
-  background: var(--bg-panel);
+  padding: 0.8rem 1rem;
+  background: var(--bg-surface);
   cursor: pointer;
   color: var(--text-muted);
   list-style: none;
   display: flex;
   align-items: center;
-  gap: 0.75rem;
-  border-bottom: 1px solid transparent;
+  gap: 1rem;
+  border-bottom: 1px solid var(--border-subtle);
   transition: all 0.2s;
+  font-weight: 700;
 }
-.tool-part[open] summary {
-  border-bottom-color: var(--border-subtle);
-  color: var(--text-secondary);
+
+.tool-part summary:hover {
+  background: var(--bg-panel);
+  color: var(--accent-ops);
 }
 
 .tool-part summary::before {
-  content: "RUN";
-  font-size: 0.7em;
-  background: var(--bg-surface);
-  padding: 2px 6px;
-  border: 1px solid var(--border-subtle);
-  border-radius: 2px;
+  content: "[+]";
+  color: var(--accent-ops);
+  font-family: monospace;
+}
+.tool-part[open] summary::before {
+  content: "[-]";
 }
 
 .tool-name {
   color: var(--accent-active);
-  font-weight: 700;
+  text-transform: uppercase;
+  letter-spacing: 0.05em;
 }
 
 .tool-args {
   padding: 1rem;
-  color: var(--text-muted);
-  background: #050505;
-  border-bottom: 1px solid var(--border-subtle);
-  font-size: 0.8rem;
+  color: #a1a1aa;
+  background: #0a0a0a;
+  border-bottom: 1px dashed var(--border-subtle);
+  font-size: 0.75rem;
+  white-space: pre-wrap;
+  font-family: "JetBrains Mono", monospace;
 }
 
 .tool-result {
   padding: 1rem;
-  background: rgba(24, 24, 27, 0.3);
-  color: var(--text-secondary);
+  background: #050505; /* Deep black */
+  color: #22c55e; /* Matrix Green for results */
+  font-family: "JetBrains Mono", monospace;
+  overflow-x: auto;
   border-top: 1px solid var(--border-subtle);
 }
 
@@ -444,74 +588,97 @@ header h1::after {
 
 .input-form {
   display: flex;
-  gap: 0; /* Connected inputs */
+  gap: 0;
   padding: 0;
-  margin: 1rem 2rem 2rem; /* Floating above bottom */
-  border: 1px solid var(--accent-ops); /* Full Amber Border */
-  background: var(--bg-surface);
-  box-shadow: 0 0 20px rgba(0, 0, 0, 0.5);
+  margin: 1rem 2.5rem 2.5rem;
+  border: 1px solid var(--accent-ops);
+  background: rgba(9, 9, 11, 0.95);
+  box-shadow: 0 0 15px rgba(245, 158, 11, 0.2);
   position: relative;
-  border-radius: 4px;
+  /* Tech Corners */
+  clip-path: polygon(
+    0 0, 
+    100% 0, 
+    100% calc(100% - 15px), 
+    calc(100% - 15px) 100%, 
+    15px 100%, 
+    0 calc(100% - 15px)
+  );
 }
 
-/* Command Prompt Indicator */
+.input-form:focus-within {
+  box-shadow: 0 0 25px rgba(245, 158, 11, 0.4), inset 0 0 10px rgba(245, 158, 11, 0.1);
+  border-color: #fbbf24;
+}
+
 .input-form::before {
+  content: "CMD_INPUT";
+  position: absolute;
+  top: -10px;
+  right: 15px;
+  background: var(--bg-void);
+  padding: 0 8px;
+  color: var(--border-active);
+  font-family: var(--font-mono);
+  font-size: 0.6rem;
+  z-index: 10;
+}
+
+.input-form::after {
   content: ">_";
   position: absolute;
-  left: 1.25rem;
+  left: 1.5rem;
   top: 50%;
   transform: translateY(-50%);
   color: var(--accent-ops);
   font-family: var(--font-mono);
   font-weight: 700;
-  font-size: 1.1rem;
+  font-size: 1.2rem;
   z-index: 10;
-  pointer-events: none;
+  animation: pulse 1s infinite;
 }
 
 .input-form input {
   flex: 1;
-  padding: 1.25rem 1.25rem 1.25rem 3.5rem; /* Space for prompt */
+  padding: 1.5rem 1.5rem 1.5rem 3.5rem;
   border: none;
   background: transparent;
   color: var(--text-primary);
-  font-family: var(--font-mono); /* Terminal Input Font */
-  font-size: 1rem;
+  font-family: var(--font-mono);
+  font-size: 1.1rem;
   outline: none;
-}
-.input-form input::placeholder {
-  color: var(--text-muted);
-  text-transform: uppercase;
-  font-size: 0.9rem;
-  letter-spacing: 0.05em;
+  caret-color: var(--accent-ops);
 }
 
 .input-form button {
-  width: 60px;
+  width: 80px;
   border: none;
-  border-left: 1px solid var(--border-subtle);
-  background: var(--bg-panel);
-  color: var(--text-muted);
+  border-left: 1px solid var(--accent-ops);
+  background: transparent;
+  color: var(--accent-ops);
   cursor: pointer;
   transition: all 0.2s;
   display: flex;
+  flex-direction: column;
   align-items: center;
   justify-content: center;
+  font-size: 0.7rem;
+  font-family: var(--font-mono);
+  letter-spacing: 0.1em;
+  gap: 4px;
+}
+
+.input-form button::after {
+  content: "EXECUTE";
+  font-weight: 700;
 }
 
 .input-form button:hover:not(:disabled) {
   background: var(--accent-ops);
-  color: #000; /* Black icon on Amber */
+  color: #000;
+  box-shadow: -4px 0 15px var(--accent-glow);
 }
 
 .input-form button svg {
-  width: 20px;
-  height: 20px;
-  fill: currentColor;
-}
-
-.input-form button:disabled {
-  background: #111;
-  color: #333;
-  cursor: not-allowed;
+  display: none; /* Text only for raw feel */
 }
