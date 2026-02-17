@@ -29,9 +29,16 @@ Format numbers and tables clearly. When referencing areas, use readable names (e
 Avoid emojis and decorative symbols. Keep formatting professional and clean.`;
 
 let dbPool = null;
+let dbPoolCreatedAt = 0;
+const POOL_TTL_MS = 10 * 60 * 1000; // refresh token every 10 min (tokens expire at 15)
 
 async function getPool() {
-  if (dbPool) return dbPool;
+  if (dbPool && Date.now() - dbPoolCreatedAt < POOL_TTL_MS) return dbPool;
+
+  if (dbPool) {
+    await dbPool.end().catch(() => {});
+    dbPool = null;
+  }
 
   if (!DSQL_ENDPOINT || !AWS_REGION) {
     throw new Error("DSQL_ENDPOINT and AWS_REGION must be configured.");
@@ -52,13 +59,26 @@ async function getPool() {
     ssl: { rejectUnauthorized: false },
     max: 2,
   });
+  dbPoolCreatedAt = Date.now();
   return dbPool;
 }
 
 async function query(sql, params = []) {
-  const pool = await getPool();
-  const result = await pool.query(sql, params);
-  return result.rows;
+  try {
+    const pool = await getPool();
+    const result = await pool.query(sql, params);
+    return result.rows;
+  } catch (err) {
+    if (err.message?.includes("access denied") || err.message?.includes("authentication")) {
+      dbPool?.end().catch(() => {});
+      dbPool = null;
+      dbPoolCreatedAt = 0;
+      const pool = await getPool();
+      const result = await pool.query(sql, params);
+      return result.rows;
+    }
+    throw err;
+  }
 }
 
 const tools = {
