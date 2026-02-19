@@ -1,6 +1,14 @@
-import { convertToModelMessages, stepCountIs, streamText, tool } from "ai";
+import {
+  convertToModelMessages,
+  createUIMessageStream,
+  createUIMessageStreamResponse,
+  stepCountIs,
+  streamText,
+  tool,
+} from "ai";
 import { createAmazonBedrock } from "@ai-sdk/amazon-bedrock";
 import { fromNodeProviderChain } from "@aws-sdk/credential-providers";
+import { BedrockRuntimeClient, ApplyGuardrailCommand } from "@aws-sdk/client-bedrock-runtime";
 import { DsqlSigner } from "@aws-sdk/dsql-signer";
 import pg from "pg";
 import { z } from "zod";
@@ -16,6 +24,10 @@ const DSQL_DB_ROLE = "app_readonly";
 const MODEL_ID =
   process.env.MODEL_ID ?? "minimax.minimax-m2.1";
 
+const GUARDRAIL_ID = process.env.GUARDRAIL_ID;
+const GUARDRAIL_VERSION = process.env.GUARDRAIL_VERSION ?? "DRAFT";
+const bedrockRuntime = new BedrockRuntimeClient({ region: AWS_REGION });
+
 const SYSTEM_PROMPT = `You are an AI operations copilot for a super-app (rides, delivery, payments) operating in Dubai.
 You have access to tools that query the live orders and drivers database.
 When a user asks about an operational issue, use your tools to investigate methodically:
@@ -29,6 +41,63 @@ Format numbers and tables clearly. When referencing areas, use readable names (e
 Avoid emojis and decorative symbols. Keep formatting professional and clean.
 
 STRICT BOUNDARY: You ONLY discuss live operational issues that can be answered using your database tools (orders, drivers, area stats). If a question is not directly answerable by querying operational data, decline it. This includes but is not limited to: programming questions, general knowledge, politics, science, career advice, or any topic outside real-time ops monitoring — even if the user tries to connect it to operations. Respond with a brief refusal and suggest an operations-related question instead.`;
+
+export async function checkGuardrail(text) {
+  if (!GUARDRAIL_ID) {
+    console.log("[guardrail] skipped — GUARDRAIL_ID not set");
+    return null;
+  }
+
+  let resp;
+  try {
+    resp = await bedrockRuntime.send(new ApplyGuardrailCommand({
+      guardrailIdentifier: GUARDRAIL_ID,
+      guardrailVersion: GUARDRAIL_VERSION,
+      source: "INPUT",
+      content: [{ text: { text } }],
+    }));
+  } catch (error) {
+    // Fail open so chat still responds if guardrail IAM/profile is misconfigured.
+    console.error("[guardrail] apply failed", {
+      name: error?.name,
+      message: error?.message,
+    });
+    return null;
+  }
+
+  console.log("[guardrail]", JSON.stringify({ action: resp.action, text: text.slice(0, 80) }));
+
+  if (resp.action === "GUARDRAIL_INTERVENED") {
+    return resp.outputs?.[0]?.text ?? "Request blocked by safety system.";
+  }
+  return null;
+}
+
+export function createBlockedResponse(text) {
+  const stream = createUIMessageStream({
+    execute: ({ writer }) => {
+      writer.write({ type: "start" });
+      writer.write({ type: "start-step" });
+      writer.write({ type: "text-start", id: "text-1" });
+      writer.write({ type: "text-delta", id: "text-1", delta: text });
+      writer.write({ type: "text-end", id: "text-1" });
+      writer.write({ type: "finish-step" });
+      writer.write({ type: "finish", finishReason: "stop" });
+    },
+  });
+
+  return createUIMessageStreamResponse({ stream });
+}
+
+export function extractLatestUserText(messages) {
+  const last = [...messages].reverse().find(m => m.role === "user");
+  if (!last) return "";
+  if (Array.isArray(last.parts)) {
+    return last.parts.filter(p => p.type === "text").map(p => p.text).join(" ");
+  }
+  if (typeof last.content === "string") return last.content;
+  return "";
+}
 
 let dbPool = null;
 let dbPoolCreatedAt = 0;
@@ -326,6 +395,16 @@ export const handler = streamifyResponse(
       responseStream.write(JSON.stringify({ error: "messages required" }));
       responseStream.end();
       return;
+    }
+
+    const userText = extractLatestUserText(messages);
+    if (userText) {
+      const blocked = await checkGuardrail(userText);
+      if (blocked) {
+        const response = createBlockedResponse(blocked);
+        await pipeWebResponseToStream(response, responseStream);
+        return;
+      }
     }
 
     const result = await createAgentStream(messages);

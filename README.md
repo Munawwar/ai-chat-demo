@@ -86,5 +86,6 @@ npm run seed
 
 ## Security Notes
 
-- LLM tool gets a very limited tool to query database. It does not have direct DB query access. 
+- LLM tool gets a very limited tool to query database. It does not have direct DB query access.
 - Let's say we wanted to build a tool that has full read-access to DB, then you can see that I restricted the Lambda's IAM permissions access to read-only access to DB.
+- AWS Bedrock Guardrails (Standard tier) are applied to user input before it reaches the model. The guardrail checks for prompt injection attacks, harmful content, system prompt extraction attempts, and off-topic conversations. This is a cheap pre-model gate (~$0.15/1k text units) that blocks obvious violations without burning a model call. For nuanced/borderline cases that slip past the guardrail, the system prompt instructs the model to stay on-topic.

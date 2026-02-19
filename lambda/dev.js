@@ -45,7 +45,20 @@ async function start() {
     }
   }
 
-  const { handler, createAgentStream } = await import("./index.js");
+  if (!process.env.GUARDRAIL_ID) {
+    const guardrailId = await getStackOutput("GuardrailId");
+    if (guardrailId) {
+      process.env.GUARDRAIL_ID = guardrailId;
+    }
+  }
+
+  const {
+    handler,
+    createAgentStream,
+    checkGuardrail,
+    extractLatestUserText,
+    createBlockedResponse,
+  } = await import("./index.js");
 
   const { readFile } = await import("node:fs/promises");
   const { join } = await import("node:path");
@@ -112,6 +125,25 @@ async function start() {
         }),
       );
       return;
+    }
+
+    const userText = extractLatestUserText(messages);
+    if (userText) {
+      const blocked = await checkGuardrail(userText);
+      if (blocked) {
+        const { Readable } = await import("node:stream");
+        const blockedResponse = createBlockedResponse(blocked);
+        res.writeHead(
+          blockedResponse.status || 200,
+          Object.fromEntries(blockedResponse.headers.entries()),
+        );
+        if (!blockedResponse.body) {
+          res.end();
+          return;
+        }
+        Readable.fromWeb(blockedResponse.body).pipe(res);
+        return;
+      }
     }
 
     if (DATA_STREAM_MODE) {
