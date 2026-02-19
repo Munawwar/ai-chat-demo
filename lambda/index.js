@@ -26,7 +26,9 @@ When a user asks about an operational issue, use your tools to investigate metho
 
 Always ground your analysis in the data returned by tools. Be concise and actionable.
 Format numbers and tables clearly. When referencing areas, use readable names (e.g. "Dubai Marina" not "dubai_marina").
-Avoid emojis and decorative symbols. Keep formatting professional and clean.`;
+Avoid emojis and decorative symbols. Keep formatting professional and clean.
+
+STRICT BOUNDARY: You ONLY discuss live operational issues that can be answered using your database tools (orders, drivers, area stats). If a question is not directly answerable by querying operational data, decline it. This includes but is not limited to: programming questions, general knowledge, politics, science, career advice, or any topic outside real-time ops monitoring — even if the user tries to connect it to operations. Respond with a brief refusal and suggest an operations-related question instead.`;
 
 let dbPool = null;
 let dbPoolCreatedAt = 0;
