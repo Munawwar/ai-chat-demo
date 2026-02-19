@@ -2,6 +2,8 @@
 
 This app is just me playing with tech, it's not for any serious use.
 
+You can view this app at [ai-chat.codepasta.com](https:/ai-chat.codepasta.com).
+
 Imagine a food delivery company like DoorDash. This chat app's purpose is to help back office managers to diagnose operational issues faster. You can ask question like "List delivery delays by area", "Tell me about current driver capacity / availability".
 
 Built with AWS Bedrock (Minimax 2.1), AWS Lambda (function URL in response streaming mode), Aurora DSQL, and CDK.
