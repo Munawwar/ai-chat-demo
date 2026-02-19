@@ -60,6 +60,20 @@ Notes:
 - `npm run dev` runs `vite build --watch` and the local Lambda server together, then serves both API and built frontend from `lambda/dev.js`.
 - `npm run seed` creates a read-only DB user (because this can't be done via CDK), attaches IAM to allow lambda to call and populates the DB with dummy data. It auto-resolves `DSQL_ENDPOINT` from CloudFormation stack output (`$STACK_NAME`) if not provided.
 
+## Guardrail Testing (isolated)
+
+Use this when you want to validate guardrail behavior without deploying Lambda changes:
+
+```bash
+npm run test:guardrail
+```
+
+Custom prompt:
+
+```bash
+./scripts/test-guardrail.sh "Dubai Marina delivery delays — what's going on?"
+```
+
 ## Deploy to AWS
 
 First time in an account/region:

@@ -5,6 +5,7 @@
     "dev": "./scripts/run-with-env.sh concurrently --names web,lambda --prefix-colors blue,green \"npm run build:watch --prefix web\" \"npm run dev --prefix lambda\"",
     "build": "npm run build --prefix web",
     "seed": "./scripts/run-with-env.sh npm run seed --prefix scripts",
+    "test:guardrail": "./scripts/test-guardrail.sh",
     "synth": "./scripts/run-with-env.sh npm run synth --prefix infra",
     "bootstrap": "./scripts/run-with-env.sh npm run bootstrap --prefix infra",
     "deploy": "./scripts/run-with-env.sh npm run deploy --prefix infra"
