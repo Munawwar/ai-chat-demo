@@ -11,7 +11,7 @@ const API_URL = import.meta.env.VITE_API_URL
 const transport = new DefaultChatTransport({ api: API_URL });
 
 export default function App() {
-  const { messages, status, sendMessage } = useChat({ transport });
+  const { messages, status, sendMessage, setMessages } = useChat({ transport });
   const [input, setInput] = useState("");
   const messagesEndRef = useRef<HTMLDivElement>(null);
   const isLoading = status === "submitted" || status === "streaming";
@@ -35,6 +35,11 @@ export default function App() {
           <h1>AI Ops Copilot</h1>
           <p className="subtitle">Dubai Food Delivery Operations</p>
         </div>
+        {messages.length > 0 && (
+          <button className="new-chat-btn" onClick={() => setMessages([])}>
+            NEW_SESSION
+          </button>
+        )}
       </header>
 
       <div className="messages">
